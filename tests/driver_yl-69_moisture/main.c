@@ -30,16 +30,20 @@
 #error "Please enable at least 1 ADC device to run this test"
 #endif
 
-#define RES             ADC_RES_12BIT
-#define DELAY           1E6 /**< Default Conversion Time in us */
-#define ADC_IN_USE      ADC_0
-#define ADC_CHANNEL_USE 0
-#define GPIO_POWER_PIN  GPIO_0
+#define RES                         ADC_RES_12BIT
+#define DELAY_START_SENS_PWR        1E6 /**< Default Conversion Time in us */
+#define ADC_IN_USE                  ADC_0
+#define ADC_CHANNEL_USE             0
+#define GPIO_POWER_PIN              GPIO_0
+#define TIME_BETWEEN_MEASURE_SEC    60
 
-static int value;
+static unsigned int value;
 
 int main(void)
 {
+
+    timex_t sleep = timex_set(TIME_BETWEEN_MEASURE_SEC, 0);
+
     puts("\nRIOT test for a moisture sensor\n");
 
     /* initialize a GPIO that powers the sensor just during a measure */
@@ -69,16 +73,18 @@ int main(void)
         gpio_set(GPIO_POWER_PIN);
 
         /* just for safety */
-        vtimer_usleep(100);
+        vtimer_usleep(DELAY_START_SENS_PWR);
 
         value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
         gpio_clear(GPIO_POWER_PIN);
 
         /* print the result */
-        printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
-        /* sleep a little while */
-        vtimer_usleep(DELAY);
+        //printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
+        printf("%4i\n", value);
+
+        /* Measure once a minute */
+        vtimer_sleep(sleep);
     }
 
     return 0;
