@@ -35,7 +35,7 @@
 #define ADC_IN_USE                  ADC_0
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
-#define TIME_BETWEEN_MEASURE_SEC    60
+#define TIME_BETWEEN_MEASURE_SEC    20
 
 static unsigned int value;
 
