@@ -23,6 +23,7 @@
 #include "cpu.h"
 #include "board.h"
 #include "vtimer.h"
+#include "hwtimer.h"
 #include "periph/adc.h"
 #include "periph/gpio.h"
 
@@ -35,7 +36,7 @@
 #define ADC_IN_USE                  ADC_0
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
-#define TIME_BETWEEN_MEASURE_SEC    20
+#define TIME_BETWEEN_MEASURE_SEC    10
 
 static unsigned int value;
 
@@ -73,9 +74,10 @@ int main(void)
         gpio_set(GPIO_POWER_PIN);
 
         /* just for safety */
-        vtimer_usleep(DELAY_START_SENS_PWR);
+        //vtimer_usleep(DELAY_START_SENS_PWR);
+        //hwtimer_wait(HWTIMER_TICKS(DELAY_START_SENS_PWR));
 
-        value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
+        //value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
         gpio_clear(GPIO_POWER_PIN);
 
@@ -84,7 +86,8 @@ int main(void)
         printf("%4i\n", value);
 
         /* Measure once a minute */
-        vtimer_sleep(sleep);
+        //vtimer_usleep(5000000);
+        //hwtimer_wait(HWTIMER_TICKS(5000000));
     }
 
     return 0;
