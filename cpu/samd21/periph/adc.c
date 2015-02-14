@@ -200,7 +200,7 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
 
     if(ADC_0_NEG_INPUT != ADC_INPUTCTRL_MUXNEG_GND)
     {
-        ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_NEG_INPUT);
+        ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_NEG_INPUT); //////////////////////////////////////////////////////////////////////////////////////////
         ADC_0_PORT.PINCFG[ADC_0_NEG_INPUT].bit.INEN = true;
         ADC_0_PORT.PINCFG[ADC_0_NEG_INPUT].bit.PULLEN = false;
     } 
@@ -210,6 +210,9 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
 
     /* Set Voltage Reference */
     adc->REFCTRL.reg = (ADC_0_REF_COM_EN << ADC_REFCTRL_REFCOMP_Pos) | ADC_0_REF_DEFAULT;
+
+    int test = adc->REFCTRL.reg;
+    printf("REFCTRL %i\n", test);
 
     switch (precision)
     {
@@ -253,6 +256,7 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
     /* If external vref. Pin setup */
     if(ADC_0_REF_DEFAULT == ADC_0_REF_EXT_B)
     {
+
         ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_REF_DEFAULT);
         ADC_0_PORT.PINCFG[ADC_0_REF_DEFAULT].bit.INEN = true;
         ADC_0_PORT.PINCFG[ADC_0_REF_DEFAULT].bit.PULLEN = false;
@@ -265,7 +269,7 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
         (ADC_0_CORRECTION_EN << ADC_CTRLB_CORREN_Pos) | 
         (ADC_0_FREE_RUNNING << ADC_CTRLB_FREERUN_Pos) | 
         (ADC_0_LEFT_ADJUST << ADC_CTRLB_LEFTADJ_Pos) |
-        (ADC_0_DIFFERENTIAL_MODE << ADC_CTRLB_DIFFMODE_Pos);        
+        (ADC_0_DIFFERENTIAL_MODE << ADC_CTRLB_DIFFMODE_Pos);
 
 
     /* Configure Window Mode Register */

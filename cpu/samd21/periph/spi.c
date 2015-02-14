@@ -82,7 +82,7 @@ int spi_init_master(spi_t dev, spi_conf_t conf, spi_speed_t speed)
         break;
     case SPI_CONF_FIRST_FALLING:/**< first data bit is transacted on the first falling SCK edge */
         cpha = 0;
-        cpol = 1;
+        cpol = 1; 
         break;
     case SPI_CONF_SECOND_FALLING:/**< first data bit is transacted on the second falling SCK edge */
         cpha = 1;

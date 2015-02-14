@@ -49,9 +49,9 @@ extern "C" {
  * @name UART configuration
  * @{
  */
-#define UART_NUMOF          (1U)
+#define UART_NUMOF          (2U)
 #define UART_0_EN           1
-#define UART_1_EN           0
+#define UART_1_EN           1
 #define UART_2_EN           0
 #define UART_3_EN           0
 #define UART_IRQ_PRIO       1
@@ -69,12 +69,15 @@ extern "C" {
 
 
 /* UART 1 device configuration */
-#define UART_1_DEV
-#define UART_1_IRQ
-#define UART_1_ISR
+#define UART_1_DEV          SERCOM5->USART
+#define UART_1_IRQ          SERCOM5_IRQn
+#define UART_1_ISR          isr_sercom5
 /* UART 1 pin configuration */
-#define UART_1_PORT
-#define UART_1_PINS
+#define UART_1_PORT         (PORT->Group[0])
+#define UART_1_TX_PIN       (22)
+#define UART_1_RX_PIN       (23)
+#define UART_1_PINS         (PORT_PA22 | PORT_PA23)
+#define UART_1_REF_F        (8000000UL)
 /** @} */
 
 
@@ -310,7 +313,7 @@ extern "C" {
 #define ADC_0_REF_EXT_B                    ADC_REFCTRL_REFSEL_AREFB
 #define ADC_0_REF_COM_EN                   0
 /* Use this to define the value used */ 
-#define ADC_0_REF_DEFAULT                  ADC_0_REF_INT_1V
+#define ADC_0_REF_DEFAULT                  ADC_0_REF_INT_1V//ADC_0_REF_EXT_B
 
 /* ADC 0 ACCUMULATE */
 #define ADC_0_ACCUM_DISABLE                ADC_AVGCTRL_SAMPLENUM_1

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Freie Universität Berlin
+ * Copyright (C) 2015 HAW Hamburg
  *
  * This file is subject to the terms and conditions of the GNU Lesser General
  * Public License v2.1. See the file LICENSE in the top level directory for more
@@ -11,7 +11,7 @@
  * @{
  *
  * @file
- * @brief       Test for YL-69 moisture sensor
+ * @brief       Test for the SEN0114 moisture sensor
  *
  * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  *
@@ -23,7 +23,6 @@
 #include "cpu.h"
 #include "board.h"
 #include "vtimer.h"
-#include "hwtimer.h"
 #include "periph/adc.h"
 #include "periph/gpio.h"
 
@@ -32,20 +31,18 @@
 #endif
 
 #define RES                         ADC_RES_12BIT
-#define DELAY_START_SENS_PWR        1E6 /**< Default Conversion Time in us */
 #define ADC_IN_USE                  ADC_0
 #define ADC_CHANNEL_USE             0
 #define GPIO_POWER_PIN              GPIO_0
-#define TIME_BETWEEN_MEASURE_SEC    10
 
 static unsigned int value;
 
 int main(void)
 {
-
-    timex_t sleep = timex_set(TIME_BETWEEN_MEASURE_SEC, 0);
-
     puts("\nRIOT test for a moisture sensor\n");
+
+    timex_t sleep1 = timex_set(1, 0); /* 1 sec. */
+    timex_t sleep2 = timex_set(5, 0); /* 10 sec. */
 
     /* initialize a GPIO that powers the sensor just during a measure */
     printf("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
@@ -74,20 +71,17 @@ int main(void)
         gpio_set(GPIO_POWER_PIN);
 
         /* just for safety */
-        //vtimer_usleep(DELAY_START_SENS_PWR);
-        //hwtimer_wait(HWTIMER_TICKS(DELAY_START_SENS_PWR));
+        vtimer_sleep(sleep1);
 
-        //value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
+        value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
         gpio_clear(GPIO_POWER_PIN);
 
         /* print the result */
-        //printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
-        printf("%4i\n", value);
+        printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
 
-        /* Measure once a minute */
-        //vtimer_usleep(5000000);
-        //hwtimer_wait(HWTIMER_TICKS(5000000));
+        /* wait for next measure */
+        vtimer_sleep(sleep2);
     }
 
     return 0;
