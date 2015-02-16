@@ -15,11 +15,10 @@
  *
  * @author      Thomas Eichinger <thomas.eichinger@fu-berlin.de>
  * @author      Troels Hoffmeyer <troels.d.hoffmeyer@gmail.com>
+ * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  *
  * @}
  */
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "board.h"
 #include "cpu.h"
@@ -29,8 +28,6 @@
 
 #include "sched.h"
 #include "thread.h"
-#define ENABLE_DEBUG (1)
-#include "debug.h"
 
 /* guard file in case no UART device was specified */
 #if UART_NUMOF
@@ -89,7 +86,6 @@ int uart_init(uart_t uart, uint32_t baudrate, uart_rx_cb_t rx_cb, uart_tx_cb_t t
         break;
 #endif
     }
-
     return 0;
 }
 
@@ -100,7 +96,6 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
     uint32_t uart_ref_f = 0;
     uint32_t tx_pin = 0;
     uint32_t rx_pin = 0;
-    uint32_t pins = 0;
     uint32_t HWSEL = 0;
 
     switch (uart) {
@@ -111,14 +106,10 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
             uart_ref_f = UART_0_REF_F;
             tx_pin = UART_0_TX_PIN;
             rx_pin = UART_0_RX_PIN;
-            pins = UART_0_PINS;
             HWSEL = 0;
 
             /* Turn on power manager for sercom0 */
             PM->APBCMASK.reg |= PM_APBCMASK_SERCOM0;
-
-            GCLK->GENCTRL.bit.GENEN = 1;
-            GCLK->GENCTRL.bit.ID = 0x00;
 
             /* configure GCLK0 to feed sercom0 */;
             GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (SERCOM0_GCLK_ID_CORE << GCLK_CLKCTRL_ID_Pos)));
@@ -136,20 +127,16 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
             uart_ref_f = UART_1_REF_F;
             tx_pin = UART_1_TX_PIN;
             rx_pin = UART_1_RX_PIN;
-            pins = UART_1_PINS;
             HWSEL = (PORT_WRCONFIG_HWSEL);
 
             /* Turn on power manager for sercom5 */
             PM->APBCMASK.reg |= PM_APBCMASK_SERCOM5;
 
-            GCLK->GENCTRL.bit.GENEN = 1;
-            GCLK->GENCTRL.bit.ID = 0x01;
-
-            /* configure GCLK1 to feed sercom5 */;
-            GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (SERCOM5_GCLK_ID_CORE << GCLK_CLKCTRL_ID_Pos)));
+            /* configure GCLK0 to feed sercom5 */;
+            GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (SERCOM5_GCLK_ID_CORE << GCLK_CLKCTRL_ID_Pos)));
             while (GCLK->STATUS.bit.SYNCBUSY);
 
-            GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK1 | (SERCOM5_GCLK_ID_SLOW << GCLK_CLKCTRL_ID_Pos)));
+            GCLK->CLKCTRL.reg = (uint16_t)((GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | (SERCOM5_GCLK_ID_SLOW << GCLK_CLKCTRL_ID_Pos)));
             while (GCLK->STATUS.bit.SYNCBUSY);
 
             break;
@@ -171,6 +158,9 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
     port_group->PINCFG[rx_pin % 32].bit.PMUXEN = 1; /* enables peripheral multiplexer */
     port_group->PINCFG[tx_pin % 32].bit.PMUXEN = 1; /* enables peripheral multiplexer */
 
+    port_group->PMUX[ tx_pin / 2 ].bit.PMUXE = 0x3;
+    port_group->PMUX[ rx_pin / 2 ].bit.PMUXO = 0x3;
+
 
     /* enable PMUX for pins and set to config D. See spec p. 12 */
     port_group->WRCONFIG.reg = HWSEL
@@ -178,9 +168,10 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
                                 | PORT_WRCONFIG_WRPMUX    /* PMUXn registers of the selected pins will be updated */
                                 | PORT_WRCONFIG_PMUX(0x3) /* Multiplexer peripheral function D */
                                 | PORT_WRCONFIG_PMUXEN    /* Peripheral multiplexer enable */
-                                | pins;                   /* Pinmask */
+                                | (1 << ( tx_pin % 16 ))
+                                | (1 << ( rx_pin % 16 ));                   /* Pinmask */
 
-    uart_dev->CTRLA.bit.ENABLE = 0; //Disable to write, need to sync tho
+    uart_dev->CTRLA.bit.ENABLE = 0; /* Disable to write, need to sync to */
     while(uart_dev->SYNCBUSY.bit.ENABLE);
 
     /* set to LSB, asynchronous mode without parity, PAD0 Tx, PAD1 Rx,
@@ -208,7 +199,6 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
     while(uart_dev->SYNCBUSY.bit.CTRLB);
 
     uart_poweron(uart);
-
     return 0;
 }
 

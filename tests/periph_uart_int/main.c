@@ -44,14 +44,14 @@
 #if UART_NUMOF
 
 #define DEV             UART_1
-#define BAUD            115200
+#define BAUD            (115200U)
 
 static volatile int main_pid;
 
 static char uart_stack[KERNEL_CONF_STACKSIZE_MAIN];
 
-static char rx_mem[128];
-static char tx_mem[128];
+static char rx_mem[64U];
+static char tx_mem[64U];
 static ringbuffer_t rx_buf;
 static ringbuffer_t tx_buf;
 
@@ -101,8 +101,8 @@ int main(void)
     puts("\nTesting interrupt driven mode of UART driver\n");
 
     puts("Setting up buffers...");
-    ringbuffer_init(&rx_buf, rx_mem, 128);
-    ringbuffer_init(&tx_buf, tx_mem, 128);
+    ringbuffer_init(&rx_buf, rx_mem, 64U);
+    ringbuffer_init(&tx_buf, tx_mem, 64U);
 
     printf("Initializing UART_%i @ %i", DEV, BAUD);
     if (uart_init(DEV, BAUD, rx, tx, 0) >= 0) {
