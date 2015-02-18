@@ -42,7 +42,7 @@ int main(void)
     puts("\nRIOT test for a moisture sensor\n");
 
     timex_t sleep1 = timex_set(1, 0); /* 1 sec. */
-    timex_t sleep2 = timex_set(5, 0); /* 10 sec. */
+    timex_t sleep2 = timex_set(1, 0); /* 10 sec. */
 
     /* initialize a GPIO that powers the sensor just during a measure */
     printf("Initializing GPIO_%i as power supplying pin", GPIO_POWER_PIN);
@@ -75,7 +75,7 @@ int main(void)
 
         value = adc_sample(ADC_IN_USE, ADC_CHANNEL_USE);
 
-        gpio_clear(GPIO_POWER_PIN);
+        //gpio_clear(GPIO_POWER_PIN);
 
         /* print the result */
         printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);

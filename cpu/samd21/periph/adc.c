@@ -194,13 +194,13 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
     ADC_0_PORT.PMUX[ ADC_0_POS_INPUT / 2].bit.PMUXE = 1;
 
     /* ADC_0_POS_INPUT Input */
-    ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_POS_INPUT);
+    ADC_0_PORT.DIRCLR.reg = (1 << ADC_INPUTCTRL_MUXPOS_PIN6_Val);
     ADC_0_PORT.PINCFG[ADC_0_POS_INPUT].bit.INEN = true;
     ADC_0_PORT.PINCFG[ADC_0_POS_INPUT].bit.PULLEN = false; 
 
     if(ADC_0_NEG_INPUT != ADC_INPUTCTRL_MUXNEG_GND)
     {
-        ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_NEG_INPUT); //////////////////////////////////////////////////////////////////////////////////////////
+        ADC_0_PORT.DIRCLR.reg = (1 << ADC_INPUTCTRL_MUXNEG_GND_Val);
         ADC_0_PORT.PINCFG[ADC_0_NEG_INPUT].bit.INEN = true;
         ADC_0_PORT.PINCFG[ADC_0_NEG_INPUT].bit.PULLEN = false;
     } 
@@ -257,9 +257,19 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
     if(ADC_0_REF_DEFAULT == ADC_0_REF_EXT_B)
     {
 
-        ADC_0_PORT.DIRCLR.reg = (1 << ADC_0_REF_DEFAULT);
+        ADC_0_PORT.DIRCLR.reg = (1 << ADC_REFCTRL_REFSEL_AREFB_Val);
         ADC_0_PORT.PINCFG[ADC_0_REF_DEFAULT].bit.INEN = true;
+        ADC_0_PORT.PINCFG[ADC_0_REF_DEFAULT].bit.PMUXEN = 1; /* enables peripheral multiplexer */
         ADC_0_PORT.PINCFG[ADC_0_REF_DEFAULT].bit.PULLEN = false;
+/*
+        ADC_0_PORT.WRCONFIG.reg =  PORT_WRCONFIG_WRPINCFG     // PINCFGy registers of the selected pins will be updated
+                                | PORT_WRCONFIG_WRPMUX    // PMUXn registers of the selected pins will be updated
+                                | PORT_WRCONFIG_PMUX(0x1) // Multiplexer peripheral function B
+                                | PORT_WRCONFIG_PMUXEN    // Peripheral multiplexer enable
+                                | (1 << ( ADC_REFCTRL_REFSEL_AREFB_Val % 16 ));
+
+        adc->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_AREFB;
+*/
     }
 
     /* Configure CTRLB Register HERE IS THE RESOLUTION SET!*/

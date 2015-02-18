@@ -19,7 +19,8 @@
  *
  * @}
  */
-
+#include <stdio.h>
+#include <string.h>
 #include "board.h"
 #include "cpu.h"
 
@@ -204,8 +205,20 @@ int uart_init_blocking(uart_t uart, uint32_t baudrate)
 
 void uart_tx_begin(uart_t uart)
 {
-
+    switch (uart) {
+#if UART_0_EN
+        case UART_0:
+            //UART_0_DEV.INTENSET.bit.DRE = 1;
+            break;
+#endif
+#if UART_1_EN
+    case UART_1:
+            //UART_1_DEV.INTENSET.bit.DRE = 1;
+            break;
+#endif
+    }
 }
+
 
 void uart_tx_end(uart_t uart)
 {
@@ -231,20 +244,29 @@ int uart_write(uart_t uart, char data)
 
 int uart_read_blocking(uart_t uart, char *data)
 {
+    SercomUsart* uart_dev = NULL;
+
     switch (uart) {
 #if UART_0_EN
         case UART_0:
-            while (UART_0_DEV.INTFLAG.bit.RXC == 0);
-            *data = (char)(0x00ff & UART_0_DEV.DATA.reg);
+            uart_dev = &UART_0_DEV;
+            //while (UART_0_DEV.INTFLAG.bit.RXC == 0);
+            //*data = (char)(0x00ff & UART_0_DEV.DATA.reg);
             break;
 #endif
 #if UART_1_EN
         case UART_1:
-            while (UART_1_DEV.INTFLAG.bit.RXC == 0);
-            *data = (char)(0x00ff & UART_1_DEV.DATA.reg);
+            uart_dev = &UART_1_DEV;
             break;
 #endif
     }
+
+    while (uart_dev->INTFLAG.bit.RXC == 0);
+    uint16_t status = (char)uart_dev->STATUS.reg;
+    *data = (char)uart_dev->DATA.reg;
+    printf("status: %i", status);
+    printf("in driver read: %c", *data);
+
     return 1;
 }
 
@@ -270,24 +292,25 @@ int uart_write_blocking(uart_t uart, char data)
 void uart_poweron(uart_t uart)
 {
 #if UART_0_EN
-    while (UART_0_DEV.SYNCBUSY.reg);
     UART_0_DEV.CTRLA.reg |= SERCOM_USART_CTRLA_ENABLE;
+    while (UART_0_DEV.SYNCBUSY.reg);
+
 #endif
 #if UART_1_EN
-    while (UART_1_DEV.SYNCBUSY.reg);
     UART_1_DEV.CTRLA.reg |= SERCOM_USART_CTRLA_ENABLE;
+    while (UART_1_DEV.SYNCBUSY.reg);
 #endif
 }
 
 void uart_poweroff(uart_t uart)
 {
 #if UART_0_EN
-    while (UART_0_DEV.SYNCBUSY.reg);
     UART_0_DEV.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
+    while (UART_0_DEV.SYNCBUSY.reg);
 #endif
 #if UART_1_EN
-    while (UART_1_DEV.SYNCBUSY.reg);
     UART_1_DEV.CTRLA.reg &= ~SERCOM_USART_CTRLA_ENABLE;
+    while (UART_1_DEV.SYNCBUSY.reg);
 #endif
 }
 
@@ -311,13 +334,13 @@ static inline void irq_handler(uint8_t uartnum, SercomUsart *dev)
         char data = (char)dev->DATA.reg;
         uart_config[uartnum].rx_cb(uart_config[uartnum].arg, data);
     }
-    else if (dev->INTFLAG.bit.TXC) {
+    else if (dev->INTFLAG.bit.DRE) {
         if (uart_config[uartnum].tx_cb(uart_config[uartnum].arg) == 0) {
             /* TXC flag is also cleared by writing data to DATA register */
-            if (dev->INTFLAG.bit.TXC) {
+            //if (dev->INTFLAG.bit.DRE) {
                 /* cleared by writing 1 to TXC */
-                dev->INTFLAG.bit.TXC = 1;
-            }
+                dev->INTENCLR.bit.DRE = 1;
+            //}
         }
     }
     else if (dev->INTFLAG.bit.ERROR) {

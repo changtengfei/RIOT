@@ -38,20 +38,19 @@
 #include "ringbuffer.h"
 #include "periph/uart.h"
 #include "periph_conf.h"
-#include "ps.h"
 
 /* only build this test if the UART driver is supported */
 #if UART_NUMOF
 
-#define DEV             UART_1
-#define BAUD            (115200U)
+#define DEV             UART_0
+#define BAUD            115200
 
 static volatile int main_pid;
 
 static char uart_stack[KERNEL_CONF_STACKSIZE_MAIN];
 
-static char rx_mem[64U];
-static char tx_mem[64U];
+static char rx_mem[128];
+static char tx_mem[128];
 static ringbuffer_t rx_buf;
 static ringbuffer_t tx_buf;
 
@@ -59,7 +58,6 @@ static ringbuffer_t tx_buf;
 void rx(void *ptr, char data)
 {
     msg_t msg;
-
     ringbuffer_add_one(&rx_buf, data);
     if (data == '\n') {
         msg_send(&msg, main_pid);
@@ -71,7 +69,6 @@ int tx(void *ptr)
     if (tx_buf.avail > 0) {
         char data = ringbuffer_get_one(&tx_buf);
         uart_write(DEV, data);
-        printf("Wrote to UART_%i:", DEV);
         return 1;
     }
 
@@ -84,11 +81,9 @@ void *uart_thread(void *arg)
     char *status = "I am written to the UART every 2 seconds\n";
 
     while (1) {
-        ringbuffer_add(&tx_buf, status, strlen(status));
-        printf("Begin TX UART_%i", DEV);
-        uart_tx_begin(DEV);
-
         vtimer_usleep(2000 * 1000);
+        ringbuffer_add(&tx_buf, status, strlen(status));
+        uart_tx_begin(DEV);
     }
 
     return 0;
@@ -101,10 +96,10 @@ int main(void)
     puts("\nTesting interrupt driven mode of UART driver\n");
 
     puts("Setting up buffers...");
-    ringbuffer_init(&rx_buf, rx_mem, 64U);
-    ringbuffer_init(&tx_buf, tx_mem, 64U);
+    ringbuffer_init(&rx_buf, rx_mem, 128);
+    ringbuffer_init(&tx_buf, tx_mem, 128);
 
-    printf("Initializing UART_%i @ %i", DEV, BAUD);
+    printf("Initializing UART @ %i", BAUD);
     if (uart_init(DEV, BAUD, rx, tx, 0) >= 0) {
         puts("   ...done");
     }
@@ -113,17 +108,9 @@ int main(void)
         return 1;
     }
 
-        char *status = "THISISWHATIAMWRITING\n";
-        ringbuffer_add(&tx_buf, status, strlen(status));
-        printf("Begin TX on UART_%i\n", DEV);
-        uart_tx_begin(DEV);
-        vtimer_usleep(2000 * 1000);
-        printf("End TX on UART_%i\n", DEV);
-
     puts("Starting timer thread that triggers UART output...");
     thread_create(uart_stack, KERNEL_CONF_STACKSIZE_MAIN, PRIORITY_MAIN - 1,
                   0, uart_thread, 0, "uart");
-
 
     while (1) {
         msg_t msg;

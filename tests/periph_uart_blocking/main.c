@@ -81,11 +81,17 @@ int main(void)
             memset(buf, 0, 128);
             printf("Input was: ");
             do {
+                puts("read blocking");
                 uart_read_blocking(i, &buf[p++]);
-                printf("%c", buf[p - 1]);
+                puts("oke");
+                printf("%c\n", buf[p]);
+                printf("%c\n", buf[p - 1]);
+                puts("plotted");
             } while (buf[p - 1] != '\n');
             buf[p] = '\0';
+            puts("print on device");
             uart_print(i, buf);
+            puts("printed on device");
             printf("\n");
         }
     }

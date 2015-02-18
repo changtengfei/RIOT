@@ -49,8 +49,8 @@ extern "C" {
  * @name UART configuration
  * @{
  */
-#define UART_NUMOF          (2U)
-#define UART_0_EN           1
+#define UART_NUMOF          (1U)
+#define UART_0_EN           0
 #define UART_1_EN           1
 #define UART_2_EN           0
 #define UART_3_EN           0
@@ -270,9 +270,9 @@ extern "C" {
 #define ADC_0_WINDOW_LOWER                 0
 #define ADC_0_WINDOW_HIGHER                0     
 
-#define ADC_0_CORRECTION_EN                0 /* disabled */
-#define ADC_0_GAIN_CORRECTION              ADC_GAINCORR_RESETVALUE
-#define ADC_0_OFFSET_CORRECTION            ADC_OFFSETCORR_RESETVALUE
+#define ADC_0_CORRECTION_EN                1 /* disabled */
+#define ADC_0_GAIN_CORRECTION              ADC_GAINCORR_GAINCORR(2048)//2048 -> 1; 4095/3700 -> 2267
+#define ADC_0_OFFSET_CORRECTION            ADC_OFFSETCORR_OFFSETCORR(90) // das geht nicht?
 #define ADC_0_SAMPLE_LENGTH                0
 #define ADC_0_PIN_SCAN_OFFSET_START        0 /* disabled */
 #define ADC_0_PIN_SCAN_INPUT_TO_SCAN       0 /* disabled */    
@@ -311,9 +311,9 @@ extern "C" {
 /* ADC 0 Voltage reference */
 #define ADC_0_REF_INT_1V                   ADC_REFCTRL_REFSEL_INT1V
 #define ADC_0_REF_EXT_B                    ADC_REFCTRL_REFSEL_AREFB
-#define ADC_0_REF_COM_EN                   0
+#define ADC_0_REF_COM_EN                   1
 /* Use this to define the value used */ 
-#define ADC_0_REF_DEFAULT                  ADC_0_REF_INT_1V//ADC_0_REF_EXT_B
+#define ADC_0_REF_DEFAULT                  ADC_0_REF_EXT_B//ADC_0_REF_INT_1V
 
 /* ADC 0 ACCUMULATE */
 #define ADC_0_ACCUM_DISABLE                ADC_AVGCTRL_SAMPLENUM_1
