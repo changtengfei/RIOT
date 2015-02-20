@@ -268,18 +268,21 @@ extern "C" {
 #define ADC_0_PRESCALER                    ADC_CTRLB_PRESCALER_DIV4
 #define ADC_0_WINDOW_MODE                  ADC_WINCTRL_WINMODE_DISABLE
 #define ADC_0_WINDOW_LOWER                 0
-#define ADC_0_WINDOW_HIGHER                0     
+#define ADC_0_WINDOW_HIGHER                0
 
+#define SAMPLE_0_V_OFFSET                  90
+#define SAMPLE_REF_V                       3700
+#define COMPUTE_GAINCORR                   ((4095.0 / (SAMPLE_REF_V-SAMPLE_0_V_OFFSET)))
 #define ADC_0_CORRECTION_EN                1 /* disabled */
-#define ADC_0_GAIN_CORRECTION              ADC_GAINCORR_GAINCORR(2048)//2048 -> 1; 4095/3700 -> 2267
-#define ADC_0_OFFSET_CORRECTION            ADC_OFFSETCORR_OFFSETCORR(90) // das geht nicht?
+#define ADC_0_OFFSET_CORRECTION            ADC_OFFSETCORR_OFFSETCORR(SAMPLE_0_V_OFFSET) /* refert to datasheet p.811 for calculation */
+#define ADC_0_GAIN_CORRECTION              ADC_GAINCORR_GAINCORR(2355)//2048 -> 1; 4095/3620 -> 2355
 #define ADC_0_SAMPLE_LENGTH                0
 #define ADC_0_PIN_SCAN_OFFSET_START        0 /* disabled */
-#define ADC_0_PIN_SCAN_INPUT_TO_SCAN       0 /* disabled */    
+#define ADC_0_PIN_SCAN_INPUT_TO_SCAN       0 /* disabled */
 #define ADC_0_LEFT_ADJUST                  0 /* disabled */
 #define ADC_0_DIFFERENTIAL_MODE            0 /* disabled */
 #define ADC_0_FREE_RUNNING                 0 /* disabled */
-#define ADC_0_EVENT_ACTION                 0 /* disabled */    
+#define ADC_0_EVENT_ACTION                 0 /* disabled */
 #define ADC_0_RUN_IN_STANDBY               0 /* disabled */
 
 /* ADC 0 Module Status flags */
@@ -313,7 +316,7 @@ extern "C" {
 #define ADC_0_REF_EXT_B                    ADC_REFCTRL_REFSEL_AREFB
 #define ADC_0_REF_COM_EN                   1
 /* Use this to define the value used */ 
-#define ADC_0_REF_DEFAULT                  ADC_0_REF_EXT_B//ADC_0_REF_INT_1V
+#define ADC_0_REF_DEFAULT                  ADC_0_REF_EXT_B
 
 /* ADC 0 ACCUMULATE */
 #define ADC_0_ACCUM_DISABLE                ADC_AVGCTRL_SAMPLENUM_1

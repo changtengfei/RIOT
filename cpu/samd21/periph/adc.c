@@ -22,7 +22,7 @@
 #include "cpu.h"
 #include "periph/adc.h"
 #include "periph_conf.h"
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 /* guard in case that no ADC device is defined */
@@ -70,7 +70,7 @@ int adc_init(adc_t dev, adc_precision_t precision)
             /* Enable bandgap if internal ref 1 volt */
             if(ADC_0_REF_DEFAULT == ADC_0_REF_INT_1V)
             {
-                SYSCTRL->VREF.reg |= SYSCTRL_VREF_BGOUTEN;                    
+                SYSCTRL->VREF.reg |= SYSCTRL_VREF_BGOUTEN;
             }
             /* Enable */
             adc->CTRLA.reg |= ADC_CTRLA_ENABLE;
@@ -212,7 +212,7 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
     adc->REFCTRL.reg = (ADC_0_REF_COM_EN << ADC_REFCTRL_REFCOMP_Pos) | ADC_0_REF_DEFAULT;
 
     int test = adc->REFCTRL.reg;
-    printf("REFCTRL %i\n", test);
+    printf("\nREFCTRL %i\n", test);
 
     switch (precision)
     {
@@ -317,9 +317,9 @@ int adc_configure_with_resolution(Adc* adc, uint32_t precision)
             /* Set gain correction value */
             adc->GAINCORR.reg = (ADC_0_GAIN_CORRECTION << ADC_GAINCORR_GAINCORR_Pos);
         }
-        if (ADC_0_OFFSET_CORRECTION > 2047 || ADC_0_OFFSET_CORRECTION < -2048) 
+        if ((int)ADC_0_OFFSET_CORRECTION > 2047 || (int)ADC_0_OFFSET_CORRECTION < -2048) 
         {
-            DEBUG("Invalid offset correction\n");
+            DEBUG("Invalid offset correction is: %i\n", ADC_0_OFFSET_CORRECTION);
             return -1;
         } 
         else 

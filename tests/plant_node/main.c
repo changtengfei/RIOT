@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <math.h>
 
 #include "cpu.h"
 #include "board.h"
@@ -79,6 +80,12 @@ int main(void)
 
         /* print the result */
         printf("Value: ADC_%i: %4i\n", ADC_IN_USE, value);
+
+        double double_test = 0.113f;
+        int int_and = (int)(double_test & 0xffffffff);
+
+
+        printf("COMPUTE_GAINCORR: %d\n", int_and);
 
         /* wait for next measure */
         vtimer_sleep(sleep2);
