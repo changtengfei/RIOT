@@ -20,13 +20,17 @@
  */
 
 #include <stdio.h>
+#include "hwtimer.h"
 
 int main(void)
 {
-    puts("Hello World!");
-
     printf("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
     printf("This board features a(n) %s MCU.\n", RIOT_MCU);
+
+    while(1) {
+            puts("Hello World!");
+            hwtimer_wait(100000);
+    }
 
     return 0;
 }

@@ -25,6 +25,8 @@
 #include "stm32f407xx.h"
 #elif defined CPU_MODEL_STM32F415RG
 #include "stm32f415xx.h"
+#elif defined CPU_MODEL_STM32F429ZI
+#include "stm32f429xx.h"
 #endif
 
 /**
