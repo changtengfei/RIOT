@@ -35,6 +35,12 @@ ifneq (,$(filter at86rf2%,$(USEMODULE)))
   USEMODULE += netif
 endif
 
+ifneq (,$(filter l2_reflector,$(USEMODULE)))
+  USEMODULE += ieee802154
+  USEMODULE += xtimer
+  USEMODULE += netif
+endif
+
 ifneq (,$(filter cc110x,$(USEMODULE)))
   USEMODULE += ieee802154
 endif
