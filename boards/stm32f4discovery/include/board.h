@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 Freie Universität Berlin
+ * Copyright (C) 2016 Hamburg University of Applied Sciences
  *
  * This file is subject to the terms and conditions of the GNU Lesser General
  * Public License v2.1. See the file LICENSE in the top level directory for more
@@ -16,6 +17,7 @@
  * @brief       Board specific definitions for the STM32F4Discovery evaluation board
  *
  * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
+ * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  */
 
 #ifndef BOARD_H_
@@ -37,6 +39,18 @@ extern "C" {
 #define XTIMER_OVERHEAD     (6)
 #define XTIMER_BACKOFF      (10)
 /** @} */
+
+/**
+ * @name AT86RF233 configuration for externally connected device
+ *
+ * {spi bus, spi speed, cs pin, int pin, reset pin, sleep pin}
+ */
+#define AT86RF2XX_PARAMS_BOARD      {.spi = SPI_0, \
+                                     .spi_speed = SPI_SPEED_5MHZ, \
+                                     .cs_pin = GPIO_PIN(PORT_A, 0), \
+                                     .int_pin = GPIO_PIN(PORT_A, 1), \
+                                     .sleep_pin = GPIO_PIN(PORT_D, 8), \
+                                     .reset_pin = GPIO_PIN(PORT_D, 9)}
 
 /**
  * @name LED pin definitions

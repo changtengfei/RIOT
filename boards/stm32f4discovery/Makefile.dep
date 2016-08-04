@@ -1,0 +1,6 @@
+ifneq (,$(filter gnrc_netdev_default netdev_default,$(USEMODULE)))
+  USEMODULE += at86rf233
+  #USEMODULE += netif
+  #USEMODULE += gnrc_netdev2
+  #USEMODULE += netdev2_ieee802154
+endif
