@@ -32,10 +32,10 @@
 #include "ps.h"
 
 #ifndef PACKET_DELAY
-#define error "PACKET_DELAY not defined"
+#define PACKET_DELAY 1000000
 #endif
 #ifndef NUM_PACKETS
-#define error "NUM_PACKETS not defined"
+#define NUM_PACKETS 50
 #endif
 
 
@@ -64,7 +64,9 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
 
     for (unsigned int i = 0; i < num; i++) {
 
-        printf(" tx (%i)\n", i);
+        sprintf(data, "%02d Msg buffer w/20b", i);
+
+        printf(" tx %i\n", i);
 
         gnrc_pktsnip_t *payload, *udp, *ip;
 
@@ -114,8 +116,6 @@ int main(void)
     xtimer_sleep(20);
 
     char data[21];
-
-    sprintf(data, "Msg %02d buffer w/20b", (unsigned int)666);
 
     send("2001::1", "1234", data, NUM_PACKETS, PACKET_DELAY);
 

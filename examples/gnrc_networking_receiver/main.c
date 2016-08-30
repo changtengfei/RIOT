@@ -31,6 +31,10 @@
 #include "xtimer.h"
 #include "ps.h"
 
+#ifndef NUM_PACKETS
+#define NUM_PACKETS 50
+#endif
+
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 
@@ -97,8 +101,10 @@ int main(void)
         switch (msg.type) {
             case GNRC_NETAPI_MSG_TYPE_RCV:
 
-                printf(" rx (%i)\n", rx_counter++);
                 packet = (gnrc_pktsnip_t *)msg.content.ptr;
+
+                printf(" rx %i counter %i\n", atoi((char *)packet->data), rx_counter++);
+
                 gnrc_pktbuf_release(packet);
 
                 break;
