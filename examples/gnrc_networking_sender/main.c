@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Freie Universität Berlin
+ * Copyright (C) 2016 HAW Hamburg
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -11,9 +11,9 @@
  * @{
  *
  * @file
- * @brief       Example application for demonstrating the RIOT network stack
+ * @brief       Example application measuring energy consumption
  *
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
+ * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  *
  * @}
  */
@@ -30,14 +30,14 @@
 #include "timex.h"
 #include "xtimer.h"
 #include "ps.h"
+#include "board.h"
 
 #ifndef PACKET_DELAY
 #define PACKET_DELAY 1000000
 #endif
 #ifndef NUM_PACKETS
-#define NUM_PACKETS 50
+#define NUM_PACKETS 100
 #endif
-
 
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
@@ -62,11 +62,14 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
         return;
     }
 
-    for (unsigned int i = 0; i < num; i++) {
+    LED0_OFF;
+    LED1_OFF;
+    LED2_OFF;
+
+    // send one packet more (for receiver) but turn on LED after num packets
+    for (unsigned int i = 0; i < num+1; i++) {
 
         sprintf(data, "%02d Msg buffer w/20b", i);
-
-        printf(" tx %i\n", i);
 
         gnrc_pktsnip_t *payload, *udp, *ip;
 
@@ -98,20 +101,36 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
         }
 
         xtimer_usleep(delay);
+
+        // turn on led after the before last packet
+        // wait for the delay. otherwise it's not fair 
+        // for the receiver
+        if (i == num-1) {
+            LED0_ON;
+            LED1_ON;
+            LED2_ON;
+        }
     }
+
+    printf("Sender done");
 
 }
 
 int main(void)
 {
+    LED0_ON;
+    LED1_ON;
+    LED2_ON;
     /* we need a message queue for the thread running the shell in order to
      * receive potentially fast incoming networking packets */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
-    /*msg_t msg;*/
+
+    kernel_pid_t ifs[GNRC_NETIF_NUMOF];
+    gnrc_netif_get(ifs);
 
     puts("RIOT network stack example application");
 
-    gnrc_rpl_init(7);
+    gnrc_rpl_init(ifs[0]);
 
     xtimer_sleep(20);
 

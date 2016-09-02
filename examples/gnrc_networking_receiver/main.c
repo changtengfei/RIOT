@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Freie Universität Berlin
+ * Copyright (C) 2016 HAW Hamburg
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -11,9 +11,9 @@
  * @{
  *
  * @file
- * @brief       Example application for demonstrating the RIOT network stack
+ * @brief       Example application measuring energy consumption
  *
- * @author      Hauke Petersen <hauke.petersen@fu-berlin.de>
+ * @author      Peter Kietzmann <peter.kietzmann@haw-hamburg.de>
  *
  * @}
  */
@@ -32,14 +32,12 @@
 #include "ps.h"
 
 #ifndef NUM_PACKETS
-#define NUM_PACKETS 50
+#define NUM_PACKETS 100
 #endif
 
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 
-
-static int rx_counter=0;
 
 static gnrc_netreg_entry_t server = { NULL, GNRC_NETREG_DEMUX_CTX_ALL, KERNEL_PID_UNDEF };
 
@@ -69,24 +67,31 @@ static void start_server(char *port_str)
 
 int main(void)
 {
+    LED0_ON;
+    LED1_ON;
+    LED2_ON;
+
     /* we need a message queue for the thread running the shell in order to
      * receive potentially fast incoming networking packets */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
     msg_t msg, reply;
 
+    kernel_pid_t ifs[GNRC_NETIF_NUMOF];
+    gnrc_netif_get(ifs);
+
     puts("RIOT network stack example application");
 
     bool state = 1;
-    gnrc_netapi_set(7, NETOPT_RX_END_IRQ, 0, &state,
+    gnrc_netapi_set(ifs[0], NETOPT_RX_END_IRQ, 0, &state,
                     sizeof(state));
 
-    gnrc_rpl_init(7);
+    gnrc_rpl_init(ifs[0]);
 
     ipv6_addr_t my_addr;
 
     ipv6_addr_from_str(&my_addr, "2001::1");
 
-    gnrc_ipv6_netif_add_addr(7, &my_addr, 64, 0);
+    gnrc_ipv6_netif_add_addr(ifs[0], &my_addr, 64, 0);
 
     gnrc_rpl_root_init(1, &my_addr, false, false);
 
@@ -103,9 +108,23 @@ int main(void)
 
                 packet = (gnrc_pktsnip_t *)msg.content.ptr;
 
-                printf(" rx %i counter %i\n", atoi((char *)packet->data), rx_counter++);
+                int packet_nr = atoi((char *)packet->data);
 
                 gnrc_pktbuf_release(packet);
+
+                if (packet_nr == 0) {
+                    LED0_OFF;
+                    LED1_OFF;
+                    LED2_OFF;
+                }
+                // counter starts at '0' but sender sends NUM_PACKETS+1 packets, 
+                // so the last number will be NUM_PACKETS
+                if (packet_nr == (NUM_PACKETS)) { 
+                    LED0_ON;
+                    LED1_ON;
+                    LED2_ON;
+                    printf("last pkt_no received %i\n", packet_nr);
+                }
 
                 break;
 
