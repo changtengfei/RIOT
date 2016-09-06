@@ -99,9 +99,9 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
             gnrc_pktbuf_release(ip);
             return;
         }
-
+#if PACKET_DELAY
         xtimer_usleep(delay);
-
+#endif
         // turn on led after the before last packet
         // wait for the delay. otherwise it's not fair 
         // for the receiver
