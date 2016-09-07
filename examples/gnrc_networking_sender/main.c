@@ -75,24 +75,13 @@ static void send(char *addr_str, char *port_str, char *data, unsigned int num,
 
         /* allocate payload */
         payload = gnrc_pktbuf_add(NULL, data, strlen(data), GNRC_NETTYPE_UNDEF);
-        if (payload == NULL) {
-            puts("Error: unable to copy data to packet buffer");
-            return;
-        }
+
         /* allocate UDP header, set source port := destination port */
         udp = gnrc_udp_hdr_build(payload, port, port);
-        if (udp == NULL) {
-            puts("Error: unable to allocate UDP header");
-            gnrc_pktbuf_release(payload);
-            return;
-        }
+
         /* allocate IPv6 header */
         ip = gnrc_ipv6_hdr_build(udp, NULL, &addr);
-        if (ip == NULL) {
-            puts("Error: unable to allocate IPv6 header");
-            gnrc_pktbuf_release(udp);
-            return;
-        }
+
         /* send packet */
         if (!gnrc_netapi_dispatch_send(GNRC_NETTYPE_UDP, GNRC_NETREG_DEMUX_CTX_ALL, ip)) {
             puts("Error: unable to locate UDP thread");
