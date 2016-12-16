@@ -658,7 +658,9 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
 {
     kernel_pid_t iface = KERNEL_PID_UNDEF;
     gnrc_pktsnip_t *ipv6, *payload;
+#if LOOPBACK_MODE
     ipv6_addr_t *tmp;
+#endif
     ipv6_hdr_t *hdr;
     /* get IPv6 snip and (if present) generic interface header */
     if (pkt->type == GNRC_NETTYPE_NETIF) {
@@ -701,11 +703,15 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
     if (ipv6_addr_is_multicast(&hdr->dst)) {
         _send_multicast(iface, pkt, ipv6, payload, prep_hdr);
     }
+#if LOOPBACK_MODE
     else if ((ipv6_addr_is_loopback(&hdr->dst)) ||      /* dst is loopback address */
              ((iface == KERNEL_PID_UNDEF) && /* or dst registered to any local interface */
               ((iface = gnrc_ipv6_netif_find_by_addr(&tmp, &hdr->dst)) != KERNEL_PID_UNDEF)) ||
              ((iface != KERNEL_PID_UNDEF) && /* or dst registered to given interface */
               (gnrc_ipv6_netif_find_addr(iface, &hdr->dst) != NULL))) {
+#else
+    else if (ipv6_addr_is_loopback(&hdr->dst)) {
+#endif
         uint8_t *rcv_data;
         gnrc_pktsnip_t *ptr = ipv6, *rcv_pkt;
 
