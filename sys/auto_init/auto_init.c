@@ -182,6 +182,11 @@ void auto_init(void)
     auto_init_at86rf2xx();
 #endif
 
+#ifdef MODULE_L2_REFLECTOR
+    extern void auto_init_l2_reflector(void);
+    auto_init_l2_reflector();
+#endif
+
 #ifdef MODULE_CC2420
     extern void auto_init_cc2420(void);
     auto_init_cc2420();
