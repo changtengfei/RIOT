@@ -28,6 +28,13 @@ ifneq (,$(filter bmp180,$(USEMODULE)))
     USEMODULE += xtimer
 endif
 
+ifneq (,$(filter l2_reflector,$(USEMODULE)))
+  USEMODULE += ieee802154
+  USEMODULE += xtimer
+  USEMODULE += netif
+endif
+
+
 ifneq (,$(filter cc110x,$(USEMODULE)))
   USEMODULE += ieee802154
   ifneq (,$(filter gnrc_netdev_default,$(USEMODULE)))

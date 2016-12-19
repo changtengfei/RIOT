@@ -1,6 +1,9 @@
 ifneq (,$(filter dht,$(USEMODULE)))
     USEMODULE_INCLUDES += $(RIOTBASE)/drivers/dht/include
 endif
+ifneq (,$(filter l2_reflector,$(USEMODULE)))
+    USEMODULE_INCLUDES += $(RIOTBASE)/drivers/l2_reflector/include
+endif
 ifneq (,$(filter at86rf2xx,$(USEMODULE)))
     USEMODULE_INCLUDES += $(RIOTBASE)/drivers/at86rf2xx/include
 endif

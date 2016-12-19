@@ -662,6 +662,7 @@ static void _send(gnrc_pktsnip_t *pkt, bool prep_hdr)
     ipv6_addr_t *tmp;
 #endif
     ipv6_hdr_t *hdr;
+
     /* get IPv6 snip and (if present) generic interface header */
     if (pkt->type == GNRC_NETTYPE_NETIF) {
         /* If there is already a netif header (routing protocols and
