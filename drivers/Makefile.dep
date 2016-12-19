@@ -32,6 +32,7 @@ ifneq (,$(filter l2_reflector,$(USEMODULE)))
   USEMODULE += ieee802154
   USEMODULE += xtimer
   USEMODULE += netif
+  USEMODULE += gnrc_nomac
 endif
 
 

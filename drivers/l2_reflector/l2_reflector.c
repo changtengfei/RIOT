@@ -40,42 +40,42 @@ int l2_reflector_init(l2_reflector_t *dev) {
 
     dev->driver = &l2_reflector_driver;
 
-#if CPUID_ID_LEN < 8
+#if CPUID_LEN
+/* make sure that the buffer is always big enough to store a 64bit value */
+#   if CPUID_LEN < 8
     uint8_t cpuid[8];
-#else
-    uint8_t cpuid[CPUID_ID_LEN];
+#   else
+    uint8_t cpuid[CPUID_LEN];
 #endif
     eui64_t addr_long;
+#endif
 
-    /* reset options and sequence number */
-    dev->seq_nr = 0;
-    dev->options = 0;
-    /* set short and long address */
-#if CPUID_ID_LEN
+#if CPUID_LEN
+    /* in case CPUID_LEN < 8, fill missing bytes with zeros */
+    memset(cpuid, 0, CPUID_LEN);
+
     cpuid_get(cpuid);
 
-#if CPUID_ID_LEN < 8
-    DEBUG("l2_reflector init: CPUID_ID_LEN < 8\n");
-    /* in case CPUID_ID_LEN < 8, fill missing bytes with zeros */
-    for (int i = CPUID_ID_LEN; i < 8; i++) {
-        cpuid[i] = 0;
-    }
-#else
-    for (int i = 8; i < CPUID_ID_LEN; i++) {
+#if CPUID_LEN > 8
+    for (int i = 8; i < CPUID_LEN; i++) {
         cpuid[i & 0x07] ^= cpuid[i];
     }
 #endif
     /* make sure we mark the address as non-multicast and not globally unique */
     cpuid[0] &= ~(0x01);
     cpuid[0] |= 0x02;
+    
     /* copy and set long address */
     memcpy(&addr_long, cpuid, 8);
+#endif
+
     l2_reflector_set_addr_long(dev, NTOHLL(addr_long.uint64.u64));
     l2_reflector_set_addr_short(dev, NTOHS(addr_long.uint16[0].u16));
-#else
-    l2_reflector_set_addr_long(dev, L2_REFLECTOR_DEFAULT_ADDR_LONG);
-    l2_reflector_set_addr_short(dev, L2_REFLECTOR_DEFAULT_ADDR_SHORT);
-#endif
+
+
+    /* reset options and sequence number */
+    dev->seq_nr = 0;
+    dev->options = 0;
 
     dev->options |= L2_REFLECTOR_OPT_AUTOACK;
 
