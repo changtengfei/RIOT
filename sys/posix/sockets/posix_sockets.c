@@ -176,7 +176,7 @@ static int _ep_to_sockaddr(const struct _sock_tl_ep *ep,
             struct sockaddr_in *in_addr = (struct sockaddr_in *)out;
 
             in_addr->sin_family = AF_INET;
-            in_addr->sin_addr.s_addr = ep->addr.ipv4;
+            //in_addr->sin_addr.s_addr = ep->addr.ipv4;
             in_addr->sin_port = htons(ep->port);
             return sizeof(struct sockaddr_in);
         }
@@ -207,7 +207,7 @@ static int _sockaddr_to_ep(const struct sockaddr *address, socklen_t address_len
             }
             struct sockaddr_in *in_addr = (struct sockaddr_in *)address;
             out->family = AF_INET;
-            out->addr.ipv4 = in_addr->sin_addr.s_addr;
+            //out->addr.ipv4 = in_addr->sin_addr.s_addr;
             out->port = ntohs(in_addr->sin_port);
             break;
 #ifdef SOCK_HAS_IPV6
