@@ -6297,9 +6297,9 @@ typedef struct
 /******************************************************************************/
 /*******************  Bit definition for FLASH_ACR register  ******************/
 #define  FLASH_ACR_LATENCY                   ((uint32_t)0x00000007)        /*!< LATENCY[2:0] bits (Latency) */
-#define  FLASH_ACR_LATENCY_0                 ((uint32_t)0x00000001)        /*!< Bit 0 */
-#define  FLASH_ACR_LATENCY_1                 ((uint32_t)0x00000002)        /*!< Bit 1 */
-#define  FLASH_ACR_LATENCY_2                 ((uint32_t)0x00000004)        /*!< Bit 2 */
+#define  FLASH_ACR_LATENCY_0                 ((uint32_t)0x00000000)        /*!< Bit 0 */
+#define  FLASH_ACR_LATENCY_1                 ((uint32_t)0x00000001)        /*!< Bit 1 */
+#define  FLASH_ACR_LATENCY_2                 ((uint32_t)0x00000002)        /*!< Bit 2 */
 
 #define  FLASH_ACR_HLFCYA                    ((uint32_t)0x00000008)        /*!< Flash Half Cycle Access Enable */
 #define  FLASH_ACR_PRFTBE                    ((uint32_t)0x00000010)        /*!< Prefetch Buffer Enable */
