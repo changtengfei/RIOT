@@ -99,17 +99,6 @@ void l2_reflector_setup(l2_reflector_t *dev)
     DEBUG("[l2_reflector]: init complete.\n");
 }
 
-
-static void _irq_handler(void *arg)
-{
-    netdev2_t *dev = (netdev2_t *) arg;
-
-    if (dev->event_callback) {
-        DEBUG("[l2_reflector]: _irq_handler\n");
-        dev->event_callback(dev, NETDEV2_EVENT_ISR);
-    }
-}
-
 static int _init(netdev2_t *netdev)
 {
     (void)netdev;
@@ -153,8 +142,8 @@ static int _send(netdev2_t *netdev, const struct iovec *vector, unsigned count)
 
     DEBUG("[l2_reflector]: send packet of size %i.\n", (int)len_txrx);
 
-    /* send data out directly if pre-loading id disabled */
-    _irq_handler((void *)netdev);
+    /* tell mac layer receive was complete */
+    netdev->event_callback(netdev, NETDEV2_EVENT_RX_COMPLETE);
 
     /* return the number of bytes that were actually send out */
     return (int)len_txrx;
