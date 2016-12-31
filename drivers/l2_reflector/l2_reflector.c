@@ -72,7 +72,6 @@ int l2_reflector_init(l2_reflector_t *dev) {
     l2_reflector_set_addr_long(dev, NTOHLL(addr_long.uint64.u64));
     l2_reflector_set_addr_short(dev, NTOHS(addr_long.uint16[0].u16));
 
-
     /* reset options and sequence number */
     dev->seq_nr = 0;
     dev->options = 0;
@@ -116,6 +115,40 @@ uint64_t l2_reflector_get_addr_long(l2_reflector_t *dev)
         ap[i] = dev->addr_long[7 - i];
     }
     return addr;
+}
+
+static size_t _get_frame_hdr_len(uint8_t *mhr)
+{
+    uint8_t tmp;
+    size_t len = 3;
+
+    /* figure out address sizes */
+    tmp = (mhr[1] & IEEE802154_FCF_DST_ADDR_MASK);
+    if (tmp == IEEE802154_FCF_DST_ADDR_SHORT) {
+        len += 4;
+    }
+    else if (tmp == IEEE802154_FCF_DST_ADDR_LONG) {
+        len += 10;
+    }
+    else if (tmp != IEEE802154_FCF_DST_ADDR_VOID) {
+        return 0;
+    }
+    tmp = (mhr[1] & IEEE802154_FCF_SRC_ADDR_MASK);
+    if (tmp == IEEE802154_FCF_SRC_ADDR_VOID) {
+        return len;
+    }
+    else {
+        if (!(mhr[0] & IEEE802154_FCF_PAN_COMP)) {
+            len += 2;
+        }
+        if (tmp == IEEE802154_FCF_SRC_ADDR_SHORT) {
+            return (len + 2);
+        }
+        else if (tmp == IEEE802154_FCF_SRC_ADDR_LONG) {
+            return (len + 8);
+        }
+    }
+    return 0;
 }
 
 static size_t _make_data_frame_hdr(l2_reflector_t *dev, uint8_t *buf,
@@ -225,6 +258,7 @@ static gnrc_pktsnip_t *_make_netif_hdr(uint8_t *mhr)
     else {
         return NULL;
     }
+
     /* allocate space for header */
     snip = gnrc_pktbuf_add(NULL, NULL, sizeof(gnrc_netif_hdr_t) + src_len + dst_len,
                            GNRC_NETTYPE_NETIF);
@@ -256,15 +290,18 @@ static gnrc_pktsnip_t *_make_netif_hdr(uint8_t *mhr)
     return snip;
 }
 
+
+uint8_t len_txrx = 0;
+uint8_t reflect_data[IEEE802154_FRAME_LEN_MAX];
+
 static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
 {
     l2_reflector_t *dev = (l2_reflector_t *)netdev;
-    gnrc_pktsnip_t *snip, *hdr, *payload = NULL;
-    gnrc_netif_hdr_t *netif;
+    gnrc_pktsnip_t *snip;
+    msg_t msg;
 
-    size_t payload_len, hdr_len;
+    size_t hdr_len;
     uint8_t mhr[IEEE802154_MAX_HDR_LEN];
-    uint8_t *rcv_data;
 
     if (pkt == NULL) {
         return -ENOMSG;
@@ -278,8 +315,6 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
     if (!dev->event_cb) {
         return -1;
     }
-
-    payload_len = gnrc_pkt_len(pkt);
 
     /* create 802.15.4 header */
     hdr_len = _make_data_frame_hdr(dev, mhr, (gnrc_netif_hdr_t *)pkt->data);
@@ -298,42 +333,70 @@ static int _send(gnrc_netdev_t *netdev, gnrc_pktsnip_t *pkt)
         return -EOVERFLOW;
     }
 
-    /* receive part, maybe move to separate function */
-    hdr = _make_netif_hdr(mhr);
+
+    memcpy(reflect_data, mhr, hdr_len);
+    len_txrx +=hdr_len;
+    while (snip) {
+        memcpy(reflect_data+len_txrx, snip->data, snip->size);
+        len_txrx+=snip->size;
+        snip = snip->next;
+    }
+    gnrc_pktbuf_release(pkt);
+
+#if ENABLE_DEBUG
+    printf("l2_reflector send data:\n");
+    for (int i=0;i<len_txrx; i++){
+        printf("0x%x ", (int)reflect_data[i]);
+        if (i==hdr_len-1){
+            printf("  ");
+        }
+    }
+    printf("\n");
+#endif
+
+    /* notify driver thread about the interrupt */
+    msg.type = GNRC_NETDEV_MSG_TYPE_EVENT;
+    msg_send_int(&msg, dev->mac_pid);
+
+    return len_txrx;
+}
+
+static void _isr_event(gnrc_netdev_t *device, uint32_t event_type)
+{
+    DEBUG("l2_reflector: _isr_event\n");
+
+    l2_reflector_t *dev = (l2_reflector_t *)device;
+    (void) event_type;
+
+    size_t hdr_len;
+    gnrc_pktsnip_t *hdr, *payload = NULL;
+    gnrc_netif_hdr_t *netif;
+
+    /* receive part */
+    hdr = _make_netif_hdr((uint8_t *) reflect_data);
     if (hdr == NULL) {
         DEBUG("[l2_reflector] error: unable to allocate netif header\n");
-        return -EOVERFLOW;
+        return;
     }
     /* fill missing fields in netif header */
     netif = (gnrc_netif_hdr_t *)hdr->data;
     netif->if_pid = dev->mac_pid;
 
-    /* allocate payload */
-    payload = gnrc_pktbuf_add(hdr, NULL, gnrc_pkt_len(snip), dev->proto);
+    hdr_len = _get_frame_hdr_len((uint8_t *) reflect_data);
+
+    payload = gnrc_pktbuf_add(hdr, &(reflect_data[hdr_len]), (len_txrx - hdr_len), dev->proto);
     if (payload == NULL) {
         DEBUG("[l2_reflector] error: unable to allocate incoming payload\n");
         gnrc_pktbuf_release(hdr);
-        gnrc_pktbuf_release(pkt);
-        return -EOVERFLOW;
+        return;
     }
-    rcv_data = payload->data;
-
-    /* "reverse" packet (by making it one snip) */
-    while (snip != NULL) {
-        memcpy(rcv_data, snip->data, snip->size);
-        rcv_data += snip->size;
-        snip = snip->next;
-    }
-
-    gnrc_pktbuf_release(pkt);
+    /* reset packet length conter */
+    len_txrx = 0;
 
     DEBUG("[l2_reflector]: call event_cb function\n");
 
     /* finish and callback (mac layer) */
     dev->event_cb(NETDEV_EVENT_RX_COMPLETE, payload);
-
-    /* return the number of bytes that were actually send out */
-    return (int)(payload_len + hdr_len);
 }
 
 static int _add_event_cb(gnrc_netdev_t *dev, gnrc_netdev_event_cb_t cb)
@@ -387,13 +450,6 @@ static int _get(gnrc_netdev_t *device, netopt_t opt, void *val, size_t max_len)
             }
             *((uint64_t *)val) = l2_reflector_get_addr_long(dev);
             return sizeof(uint64_t);
-
-        case NETOPT_ADDR_LEN:
-            if (max_len < sizeof(uint16_t)) {
-                return -EOVERFLOW;
-            }
-            *((uint16_t *)val) = 2;
-            return sizeof(uint16_t);
 
         case NETOPT_SRC_LEN:
             if (max_len < sizeof(uint16_t)) {
@@ -464,10 +520,10 @@ static int _set(gnrc_netdev_t *device, netopt_t opt, void *val, size_t len)
                 return -EOVERFLOW;
             }
             if (*((uint16_t *)val) == 2) {
-                dev->options |= L2_REFLECTOR_OPT_SRC_ADDR_LONG;
+                dev->options &= !L2_REFLECTOR_OPT_SRC_ADDR_LONG;
             }
             else if (*((uint16_t *)val) == 8) {
-                dev->options &= !L2_REFLECTOR_OPT_SRC_ADDR_LONG;
+                dev->options |= L2_REFLECTOR_OPT_SRC_ADDR_LONG;
             }
             else {
                 return -ENOTSUP;
@@ -487,15 +543,6 @@ static int _set(gnrc_netdev_t *device, netopt_t opt, void *val, size_t len)
 
     return 0;
 }
-
-static void _isr_event(gnrc_netdev_t *device, uint32_t event_type)
-{
-    (void)device;
-    (void) event_type;
-
-    DEBUG("l2_reflector: _isr_event\n");
-}
-
 
 const gnrc_netdev_driver_t l2_reflector_driver = {
     .send_data = _send,
