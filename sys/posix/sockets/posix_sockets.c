@@ -871,7 +871,7 @@ ssize_t sendto(int socket, const void *buffer, size_t length, int flags,
     switch (s->type) {
 #ifdef MODULE_SOCK_IP
         case SOCK_RAW:
-            res = sock_ip_send(&s->sock->raw, buffer, length,
+            res = sock_ip_send(&s->sock->raw, buffer, length, s->protocol,
                                (sock_ip_ep_t *)&ep);
             break;
 #endif
