@@ -30,6 +30,8 @@
 #include "net/gnrc/netdev.h"
 #include "net/ethernet/hdr.h"
 
+#include "net/gnrc/netdev/blacklist.h"
+
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
 
@@ -68,6 +70,18 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                     gnrc_pktsnip_t *pkt = gnrc_netdev->recv(gnrc_netdev);
 
                     if (pkt) {
+#ifdef MODULE_GNRC_NETDEV_BLACKLIST
+                        gnrc_pktsnip_t *netif_pkt;
+                        LL_SEARCH_SCALAR(pkt, netif_pkt, type, GNRC_NETTYPE_NETIF);
+                        gnrc_netif_hdr_t *nethdr = (gnrc_netif_hdr_t *)netif_pkt->data;
+                        uint8_t * hwaddr = gnrc_netif_hdr_get_src_addr(nethdr);
+
+                        char hwaddr_str[3*8];
+                        printf("%s\n", gnrc_netif_addr_to_str(hwaddr_str, sizeof(hwaddr_str),
+                                            hwaddr, 6));
+                        /* add blacklist check and pkt drop here */
+#endif
+
                         _pass_on_packet(pkt);
                     }
 

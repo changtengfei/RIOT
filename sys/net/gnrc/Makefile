@@ -28,6 +28,9 @@ endif
 ifneq (,$(filter gnrc_ipv6_blacklist,$(USEMODULE)))
     DIRS += network_layer/ipv6/blacklist
 endif
+ifneq (,$(filter gnrc_netdev_blacklist,$(USEMODULE)))
+    DIRS += link_layer/netdev/blacklist
+endif
 ifneq (,$(filter gnrc_ndp,$(USEMODULE)))
     DIRS += network_layer/ndp
 endif
