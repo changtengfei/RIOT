@@ -1,0 +1,70 @@
+From 2214490e7d2ab4560ad446cb2f970226a9a52dc3 Mon Sep 17 00:00:00 2001
+From: PeterKietzmann <peter.kietzmann@haw-hamburg.de>
+Date: Thu, 8 Feb 2018 11:25:18 +0100
+Subject: [PATCH 3/6] Comment out problematic includes
+
+---
+ openstack/02b-MAChigh/sf0.c |  2 +-
+ openstack/04-TRAN/openudp.c | 10 +++++-----
+ openstack/openstack.c       |  4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/openstack/02b-MAChigh/sf0.c b/openstack/02b-MAChigh/sf0.c
+index d421b96a..1da71a2c 100644
+--- a/openstack/02b-MAChigh/sf0.c
++++ b/openstack/02b-MAChigh/sf0.c
+@@ -5,7 +5,7 @@
+ #include "scheduler.h"
+ #include "schedule.h"
+ #include "idmanager.h"
+-#include "openapps.h"
++// #include "openapps.h"
+ #include "openrandom.h"
+ 
+ //=========================== definition =====================================
+diff --git a/openstack/04-TRAN/openudp.c b/openstack/04-TRAN/openudp.c
+index 07b1a309..db262078 100644
+--- a/openstack/04-TRAN/openudp.c
++++ b/openstack/04-TRAN/openudp.c
+@@ -5,11 +5,11 @@
+ #include "forwarding.h"
+ #include "openqueue.h"
+ // applications
+-#include "opencoap.h"
+-#include "uecho.h"
+-#include "uinject.h"
+-#include "userialbridge.h"
+-#include "rrt.h"
++// #include "opencoap.h"
++// #include "uecho.h"
++// #include "uinject.h"
++// #include "userialbridge.h"
++// #include "rrt.h"
+ 
+ //=========================== variables =======================================
+ 
+diff --git a/openstack/openstack.c b/openstack/openstack.c
+index b7add046..e1e21070 100644
+--- a/openstack/openstack.c
++++ b/openstack/openstack.c
+@@ -34,7 +34,7 @@
+ //-- 04-TRAN
+ #include "openudp.h"
+ //===== applications
+-#include "openapps.h"
++//#include "openapps.h"
+ 
+ //=========================== variables =======================================
+ 
+@@ -75,7 +75,7 @@ void openstack_init(void) {
+    openudp_init();
+    
+    //===== applications
+-   openapps_init();
++   //openapps_init();
+    
+    openserial_printInfo(
+       COMPONENT_OPENWSN,ERR_BOOTED,
+-- 
+2.14.1
+
