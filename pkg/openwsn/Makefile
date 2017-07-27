@@ -7,7 +7,7 @@ PKG_URL=https://github.com/openwsn-berkeley/openwsn-fw.git
 .PHONY: all
 
 # no need to commit this, it's just for local debug
-OPENWSN_PATH := $(HOME)/Development/openwsn-fw
+OPENWSN_PATH := $(HOME)/openwsn-fw
 
 all:
 	rm -rf $(PKG_BUILDDIR) && mkdir -p $(PKG_BUILDDIR)

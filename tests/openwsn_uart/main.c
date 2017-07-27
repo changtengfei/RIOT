@@ -17,11 +17,8 @@ TeraTerm):
 #include "stdint.h"
 #include "stdio.h"
 #include "string.h"
-// bsp modules required
 #include "board_ow.h"
 #include "uart_ow.h"
-// #include "bsp_timer.h"
-#include "leds.h"
 
 //=========================== defines =========================================
 
@@ -58,15 +55,13 @@ int main(void) {
 
    // initialize the board
    board_init_ow();
+   uart_init_ow();
 
    // setup UART
    uart_setCallbacks(cb_uartTxDone,cb_uartRxCb);
    uart_enableInterrupts();
 
-   // setup BSP timer
-  //  bsp_timer_set_callback(cb_compare);
-  //  bsp_timer_scheduleIn(BSP_TIMER_PERIOD);
-
+   puts("send");
    while(1) {
 
       // wait for timer to elapse
@@ -83,15 +78,6 @@ int main(void) {
 
 //=========================== callbacks =======================================
 
-// void cb_compare(void) {
-//
-//    // have main "task" send over UART
-//    app_vars.uartSendNow = 1;
-//
-//    // schedule again
-//    bsp_timer_scheduleIn(BSP_TIMER_PERIOD);
-// }
-
 void cb_uartTxDone(void) {
    app_vars.uart_lastTxByteIndex++;
    if (app_vars.uart_lastTxByteIndex<sizeof(stringToSend)) {
@@ -105,7 +91,7 @@ void cb_uartRxCb(void) {
    uint8_t byte;
 
    // toggle LED
-   leds_error_toggle();
+   //leds_error_toggle();
 
    // read received byte
    byte = uart_readByte();
