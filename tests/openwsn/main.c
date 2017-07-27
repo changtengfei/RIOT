@@ -22,6 +22,7 @@
 
 #include "opendefs.h"
 #include "openstack.h"
+#include "scheduler.h"
 #include "board_ow.h"
 #include "02a-MAClow/IEEE802154E.h"
 #include "04-TRAN/openudp.h"
@@ -58,6 +59,8 @@ int main(void)
     board_init_ow();
 
     openstack_init();
+
+    scheduler_start();
     OpenQueueEntry_t*    pkt;
     uint8_t              asnArray[5];
 /*
