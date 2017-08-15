@@ -1,9 +1,8 @@
 APPLICATION = driver_soft_spi
-BOARD ?= stm32f4discovery
 include ../Makefile.tests_common
 
-USEMODULE += soft_spi
+BOARD ?= stm32f4discovery
 
-CFLAGS += -I$(CURDIR)
+USEMODULE += soft_spi
 
 include $(RIOTBASE)/Makefile.include
