@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Markus Blechschmidt <Markus.Blechschmidt@haw-hamburg.de>
+ * Copyright (C) 2017 Hamburg University of Applied Sciences
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -30,16 +30,24 @@ extern "C" {
 #endif
 
 /**
+ * @brief   Use the shared SPI functions
+ * @{
+ */
+#define PERIPH_SPI_NEEDS_TRANSFER_BYTE
+#define PERIPH_SPI_NEEDS_TRANSFER_REG
+#define PERIPH_SPI_NEEDS_TRANSFER_REGS
+
+/**
  * @brief Software SPI port descriptor
  */
 typedef struct {
-    gpio_t mosi_pin;              /**<MOSI pin */
     gpio_t miso_pin;              /**<MOSI pin */
-    gpio_t clk_pin;               /**<clock pin */
+    gpio_t mosi_pin;              /**<MOSI pin */
+    gpio_t clk_pin;               /**<CLK pin */
+    gpio_t cs_pin ;               /**<CS  pin */
     spi_mode_t spi_mode;          /**<data and clock polarity */
-    mutex_t lock;                 /**<mutex for spi access */
-    bool initialized;             /**<flag wether it has been initialized */
 } soft_spi_t;
+
 
 #ifdef __cplusplus
 }
