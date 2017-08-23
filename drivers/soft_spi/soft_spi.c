@@ -17,9 +17,13 @@
  * @author      Peter Kietzmann     <peter.kietzmann@haw-hamburg.de>
  */
 
-#include "assert.h"
+#include <stdio.h>
+#include <assert.h>
+
+#include "mutex.h"
 #include "periph/spi.h"
 #include "periph/gpio.h"
+
 #include "soft_spi.h"
 #include "soft_spi_params.h"
 
@@ -73,9 +77,6 @@ void spi_init_pins(spi_t bus)
     if (GPIO_UNDEF != soft_spi_config[bus].mosi_pin) {
         gpio_init(soft_spi_config[bus].mosi_pin, GPIO_OUT);
         gpio_clear(soft_spi_config[bus].mosi_pin);
-    }
-    if (GPIO_UNDEF != soft_spi_config[bus].miso_pin) {
-        gpio_init(soft_spi_config[bus].miso_pin, GPIO_IN);
     }
 }
 

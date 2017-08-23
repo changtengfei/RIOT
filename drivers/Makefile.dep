@@ -184,6 +184,10 @@ ifneq (,$(filter sdcard_spi,$(USEMODULE)))
   USEMODULE += xtimer
 endif
 
+ifneq (,$(filter soft_spi,$(USEMODULE)))
+  FEATURES_REQUIRED += periph_gpio
+endif
+
 ifneq (,$(filter sht11,$(USEMODULE)))
     USEMODULE += xtimer
 endif

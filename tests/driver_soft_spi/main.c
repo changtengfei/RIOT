@@ -26,12 +26,6 @@
 #include "periph/spi.h"
 #include "soft_spi.h"
 
-#ifdef SPI_NUMOF
-#pragma message("WARNING! All hardware SPI devices will be disabled.")
-#undef SPI_NUMOF
-#endif
-//#define SPI_NUMOF 0
-
 int main(void)
 {
     puts("Minimal test application for the software SPI driver");
