@@ -119,7 +119,6 @@ static uint32_t pins_enabled = (
 
 int main(void)
 {
-    uint32_t screen = 0;
     u8g2_t u8g2;
 
     /* initialize to stdout */
@@ -166,34 +165,41 @@ int main(void)
     /* start drawing in a loop */
     puts("Drawing on screen.");
 
-    while (true) {
-        u8g2_FirstPage(&u8g2);
+    for (int i=0;i<32;i++){
+        for(int j=0;j<8;j++){
+            u8g2_DrawPixel(&u8g2, i, j);
+            xtimer_usleep(25000);
+            printf("i: %i, j: %i\n", i, j);
+            u8g2_NextPage(&u8g2);
+        }
+    }
+    u8g2_SetDrawColor(&u8g2, 0);
 
-        do {
-            u8g2_SetDrawColor(&u8g2, 1);
-            u8g2_SetFont(&u8g2, u8g2_font_helvB12_tf);
+    for (int i=0;i<8;i++){
+        for(int j=0;j<8;j++){
+            u8g2_DrawPixel(&u8g2, i+24, j);
+            xtimer_usleep(50000);
+            printf("i: %i, j: %i\n", i, j);
+            u8g2_NextPage(&u8g2);
+        }
+    }
 
-            if (screen == 0) {
-                u8g2_DrawStr(&u8g2, 12, 22, "THIS");
-            }
-            else if (screen == 1) {
-                u8g2_DrawStr(&u8g2, 24, 22, "IS");
-            }
-            else if (screen == 2) {
-                u8g2_DrawBitmap(&u8g2, 0, 0, 8, 32, logo);
-            }
-        } while (u8g2_NextPage(&u8g2));
+    u8g2_ClearDisplay(&u8g2);
 
-#if TEST_OUTPUT == TEST_OUTPUT_STDOUT
-        /* transfer screen buffer to stdout */
-        utf8_show();
-#endif
+    u8g2_SetDrawColor(&u8g2, 1);
+    for (int i=0;i<32;i++){
+            u8g2_DrawVLine(&u8g2, i, 0, 8);
+            xtimer_usleep(25000);
+            u8g2_NextPage(&u8g2);
+            printf("VLine: %i\n", i);
+    }
 
-        /* show screen in next iteration */
-        screen = (screen + 1) % 3;
-
-        /* sleep a little */
-        xtimer_sleep(1);
+    u8g2_SetDrawColor(&u8g2, 0);
+    for (int i=31;i>-1;i--){
+            u8g2_DrawVLine(&u8g2, i, 0, 8);
+            xtimer_usleep(25000);
+            u8g2_NextPage(&u8g2);
+            printf("VLine: %i\n", i);
     }
 
     return 0;

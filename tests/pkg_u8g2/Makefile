@@ -8,19 +8,22 @@ USEMODULE += xtimer
 USEPKG += u8g2
 
 # set default device parameters in case they are undefined
-TEST_OUTPUT ?= 1
+TEST_OUTPUT ?= 3
 
 TEST_I2C ?= 0
 TEST_SPI ?= 0
 
 TEST_ADDR ?= 0x78
 
-TEST_PIN_CS ?= GPIO_PIN\(0,0\)
-TEST_PIN_DC ?= GPIO_PIN\(0,0\)
-TEST_PIN_RESET ?= GPIO_PIN\(0,0\)
+TEST_PIN_CS ?= GPIO_PIN\(2,4\)
+TEST_PIN_DC ?= GPIO_PIN\(0,2\)
+#TEST_PIN_RESET ?= GPIO_PIN\(0,1\)
+TEST_PIN_RESET ?= GPIO_PIN\(3,1\)
 
 ifeq ($(TEST_OUTPUT),3)
-TEST_DISPLAY ?= u8g2_Setup_ssd1306_128x64_noname_1
+#TEST_DISPLAY ?= u8g2_Setup_ssd1306_128x64_noname_1
+#TEST_DISPLAY ?= u8g2_Setup_pcd8544_84x48_1
+TEST_DISPLAY ?= u8g2_Setup_max7219_32x8_1
 endif
 
 ifeq ($(TEST_OUTPUT),4)
