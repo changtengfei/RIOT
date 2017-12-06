@@ -21,8 +21,8 @@ USEMODULE += auto_init_gnrc_netif
 USEMODULE += gnrc_ipv6_router_default
 USEMODULE += gnrc_udp
 # Add a routing protocol
-USEMODULE += gnrc_rpl
-USEMODULE += auto_init_gnrc_rpl
+#USEMODULE += gnrc_rpl
+#USEMODULE += auto_init_gnrc_rpl
 # This application dumps received packets to STDIO using the pktdump module
 USEMODULE += gnrc_pktdump
 # Additional networking modules that can be dropped if not needed
@@ -31,9 +31,35 @@ USEMODULE += gnrc_icmpv6_echo
 USEMODULE += shell
 USEMODULE += shell_commands
 USEMODULE += ps
-USEMODULE += netstats_l2
-USEMODULE += netstats_ipv6
-USEMODULE += netstats_rpl
+#USEMODULE += netstats_l2
+#USEMODULE += netstats_ipv6
+#USEMODULE += netstats_rpl
+
+
+GNRC_NETIF_NUMOF := 3
+USEMODULE += sx1276
+USEMODULE += at86rf233
+USEMODULE += enc28j60
+USEMODULE += od_string
+
+ifneq (,$(filter nucleo-l073,$(BOARD)))
+  ifneq (,$(filter at86rf233,$(USEMODULE)))
+    CFLAGS += -DAT86RF2XX_PARAM_SPI=SPI_DEV\(0\)
+    CFLAGS += -DAT86RF2XX_PARAM_SPI_CLK=SPI_CLK_5MHZ
+    CFLAGS += -DAT86RF2XX_PARAM_CS=GPIO_PIN\(1,1\)
+    CFLAGS += -DAT86RF2XX_PARAM_INT=GPIO_PIN\(1,13\)
+    CFLAGS += -DAT86RF2XX_PARAM_SLEEP=GPIO_PIN\(1,15\)
+    CFLAGS += -DAT86RF2XX_PARAM_RESET=GPIO_PIN\(1,14\)
+  endif
+  ifneq (,$(filter enc28j60,$(USEMODULE)))
+    CFLAGS += -DENC28J60_PARAM_SPI=SPI_DEV\(0\)
+    CFLAGS += -DENC28J60_PARAM_CS=GPIO_PIN\(2,5\)
+    CFLAGS += -DENC28J60_PARAM_INT=GPIO_PIN\(2,6\)
+    CFLAGS += -DENC28J60_PARAM_RESET=GPIO_PIN\(2,8\)
+    CFLAGS += -I$(CURDIR)
+    endif
+endif
+
 
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the

@@ -23,6 +23,9 @@
 #include "shell.h"
 #include "msg.h"
 
+#include "net/gnrc/pktdump.h"
+#include "net/gnrc.h"
+
 #define MAIN_QUEUE_SIZE     (8)
 static msg_t _main_msg_queue[MAIN_QUEUE_SIZE];
 
@@ -35,6 +38,9 @@ static const shell_command_t shell_commands[] = {
 
 int main(void)
 {
+    gnrc_netreg_entry_t dump = GNRC_NETREG_ENTRY_INIT_PID(GNRC_NETREG_DEMUX_CTX_ALL,
+                                                          gnrc_pktdump_pid);
+    gnrc_netreg_register(GNRC_NETTYPE_UNDEF, &dump);
     /* we need a message queue for the thread running the shell in order to
      * receive potentially fast incoming networking packets */
     msg_init_queue(_main_msg_queue, MAIN_QUEUE_SIZE);
