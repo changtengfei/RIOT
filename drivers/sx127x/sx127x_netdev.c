@@ -298,9 +298,9 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             return sizeof(uint8_t);
 
         case NETOPT_CHANNEL:
-            assert(max_len >= sizeof(uint32_t));
-            *((uint32_t*) val) = sx127x_get_channel(dev);
-            return sizeof(uint32_t);
+            assert(max_len == sizeof(uint16_t));
+            *((uint16_t *)val) = (uint16_t)sx127x_get_channel(dev);
+            return sizeof(uint16_t);
 
         case NETOPT_BANDWIDTH:
             assert(max_len >= sizeof(uint8_t));
@@ -350,6 +350,11 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
         case NETOPT_IQ_INVERT:
             assert(max_len >= sizeof(uint8_t));
             *((netopt_enable_t*) val) = sx127x_get_iq_invert(dev) ? NETOPT_ENABLE : NETOPT_DISABLE;
+            break;
+        case NETOPT_DEVICE_TYPE:
+            assert(max_len == sizeof(uint16_t));
+            *((uint16_t *)val) = NETDEV_TYPE_LORA;
+            return sizeof(uint16_t);
             break;
 
         default:
