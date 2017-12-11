@@ -24,23 +24,28 @@ USEMODULE += gnrc_udp
 #USEMODULE += gnrc_rpl
 #USEMODULE += auto_init_gnrc_rpl
 # This application dumps received packets to STDIO using the pktdump module
-USEMODULE += gnrc_pktdump
+#USEMODULE += gnrc_pktdump
 # Additional networking modules that can be dropped if not needed
 USEMODULE += gnrc_icmpv6_echo
 # Add also the shell, some shell commands
 USEMODULE += shell
 USEMODULE += shell_commands
-USEMODULE += ps
+#USEMODULE += ps
 #USEMODULE += netstats_l2
 #USEMODULE += netstats_ipv6
 #USEMODULE += netstats_rpl
 
 
-GNRC_NETIF_NUMOF := 3
+ifneq (,$(filter nucleo-l073,$(BOARD)))
 USEMODULE += sx1276
+CFLAGS += -DGNRC_IPV6_NIB_OFFL_NUMOF=6
+endif
+
+ifneq (,$(CUSTOM))
+GNRC_NETIF_NUMOF := 3
 USEMODULE += at86rf233
 USEMODULE += enc28j60
-USEMODULE += od_string
+#USEMODULE += od_string
 
 ifneq (,$(filter nucleo-l073,$(BOARD)))
   ifneq (,$(filter at86rf233,$(USEMODULE)))
@@ -60,11 +65,15 @@ ifneq (,$(filter nucleo-l073,$(BOARD)))
     endif
 endif
 
+else
+USEMODULE += random
+endif
 
 # Comment this out to disable code in RIOT that does safety checking
 # which is not needed in a production environment but helps in the
 # development process:
 DEVELHELP ?= 1
+CFLAGS += -DDEBUG_ASSERT_VERBOSE
 
 # Uncomment the following 2 lines to specify static link lokal IPv6 address
 # this might be useful for testing, in cases where you cannot or do not want to

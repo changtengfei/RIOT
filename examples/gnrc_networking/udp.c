@@ -18,7 +18,7 @@
  *
  * @}
  */
-
+#ifdef MODULE_GNRC_UDP
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -122,11 +122,13 @@ static void start_server(char *port_str)
         puts("Error: invalid port specified");
         return;
     }
+#ifdef MODULE_GNRC_PKTDUMP
     /* start server (which means registering pktdump for the chosen port) */
     server.target.pid = gnrc_pktdump_pid;
     server.demux_ctx = (uint32_t)port;
     gnrc_netreg_register(GNRC_NETTYPE_UDP, &server);
     printf("Success: started UDP server on port %" PRIu16 "\n", port);
+#endif
 }
 
 static void stop_server(void)
@@ -189,3 +191,4 @@ int udp_cmd(int argc, char **argv)
     }
     return 0;
 }
+#endif

@@ -358,6 +358,7 @@ static int _get(netdev_t *netdev, netopt_t opt, void *val, size_t max_len)
             break;
 
         default:
+            (void)max_len;
             break;
     }
 

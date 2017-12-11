@@ -109,7 +109,9 @@ static int _send(gnrc_netif_t *netif, gnrc_pktsnip_t *pkt)
         dev->stats.tx_unicast_count++;
 #endif
         res = dev->driver->send(dev, v, n);
+        gnrc_pktbuf_remove_snip(pkt, vector);
     }
+    gnrc_pktbuf_release(pkt);
     return res;
 }
 
