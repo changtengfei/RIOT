@@ -69,7 +69,7 @@ static int _init(netdev_t *netdev)
 {
     at86rf2xx_t *dev = (at86rf2xx_t *)netdev;
 
-    /* initialise GPIOs */
+    /* initialize GPIOs */
     spi_init_cs(dev->params.spi, dev->params.cs_pin);
     gpio_init(dev->params.sleep_pin, GPIO_OUT);
     gpio_clear(dev->params.sleep_pin);
@@ -595,6 +595,21 @@ static void _isr(netdev_t *netdev)
                     default:
                         DEBUG("[at86rf2xx] Unhandled TRAC_STATUS: %d\n",
                               trac_status >> 5);
+                }
+            }
+        } else if (state == AT86RF2XX_STATE_PLL_ON) {
+            at86rf2xx_set_state(dev, dev->idle_state);
+            DEBUG("[at86rf2xx] return to state 0x%x\n",dev->idle_state);
+            
+            DEBUG("[at86rf2xx] EVT - TX_END\n");
+            if (netdev->event_callback && (dev->netdev.flags & AT86RF2XX_OPT_TELL_TX_END)) {
+                if ((trac_status>>5)==7 || trac_status==AT86RF2XX_TRX_STATE__TRAC_SUCCESS) {
+                    /* Even though the reset value for register bits TRAC_STATUS is 0, the RX_AACK and
+                     * TX_ARET procedures set the register bits to TRAC_STATUS = 7 (INVALID) when it is started. */
+                    netdev->event_callback(netdev, NETDEV_EVENT_TX_COMPLETE);
+                    DEBUG("[at86rf2xx] TX SUCCESS\n");
+                }  else {
+                    DEBUG("[at86rf2xx] Unhandled TRAC_STATUS: %d\n",trac_status >> 5);
                 }
             }
         }
