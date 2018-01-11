@@ -77,8 +77,8 @@ void at86rf2xx_reset(at86rf2xx_t *dev)
     /* set default TX power */
     at86rf2xx_set_txpower(dev, AT86RF2XX_DEFAULT_TXPOWER);
     /* set default options */
-    at86rf2xx_set_option(dev, AT86RF2XX_OPT_AUTOACK, true);
-    at86rf2xx_set_option(dev, AT86RF2XX_OPT_CSMA, true);
+    at86rf2xx_set_option(dev, AT86RF2XX_OPT_AUTOACK, false);
+    at86rf2xx_set_option(dev, AT86RF2XX_OPT_CSMA, false);
     at86rf2xx_set_option(dev, AT86RF2XX_OPT_TELL_RX_START, false);
     at86rf2xx_set_option(dev, AT86RF2XX_OPT_TELL_RX_END, true);
 #ifdef MODULE_NETSTATS_L2
