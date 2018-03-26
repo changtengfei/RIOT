@@ -150,7 +150,7 @@ int netdev_ieee802154_set(netdev_ieee802154_t *dev, netopt_t opt, const void *va
     switch (opt) {
         case NETOPT_CHANNEL:
         {
-            assert(len == sizeof(uint16_t);
+            assert(len == sizeof(uint16_t));
             uint16_t chan = *((uint16_t *)value);
             /* real validity needs to be checked by device, since sub-GHz and
              * 2.4 GHz band radios have different legal values. Here we only
