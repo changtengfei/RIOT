@@ -92,7 +92,7 @@ void radio_init(void)
     DEBUG("OW RIOT radio (netdev) set default options\n");
     netopt_enable_t enable;
     enable = NETOPT_ENABLE;
-    radio_vars.dev->driver->set(radio_vars.dev, NETOPT_PROMISCUOUSMODE, &(enable), sizeof(netopt_enable_t));
+    //radio_vars.dev->driver->set(radio_vars.dev, NETOPT_PROMISCUOUSMODE, &(enable), sizeof(netopt_enable_t));
     /* Enable needed IRQs */
     enable = NETOPT_ENABLE;
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_RX_START_IRQ, &(enable), sizeof(netopt_enable_t));
@@ -111,6 +111,12 @@ void radio_init(void)
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_RAWMODE, &(enable), sizeof(netopt_enable_t));
     uint8_t retrans = 0;
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_RETRANS, &(retrans), sizeof(uint8_t));
+#ifdef PANID_DEFINED
+    uint16_t pan_default = PANID_DEFINED;
+#else
+    uint16_t pan_default = 0xcafe;
+#endif
+    radio_vars.dev->driver->set(radio_vars.dev, NETOPT_NID, &(pan_default), sizeof(uint16_t));
 
     radio_vars.state = RADIOSTATE_RFOFF;
 }
@@ -228,6 +234,7 @@ void radio_getReceivedFrame(uint8_t *bufRead,
 
     if (bytes_expected) {
         netdev_ieee802154_rx_info_t rx_info;
+        DEBUG("ow_netdev: received frame of size %i\n", bytes_expected);
         int nread = radio_vars.dev->driver->recv(radio_vars.dev, bufRead, bytes_expected, &rx_info);
         *crc = true;
         if (nread <= 2) {

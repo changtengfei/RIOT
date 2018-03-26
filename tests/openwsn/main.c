@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 
+#include "od.h"
 #include "shell.h"
 #include "openwsn.h"
 #include "net/ipv6/addr.h"
@@ -33,6 +34,7 @@
 #include "cross-layers/packetfunctions.h"
 
 extern idmanager_vars_t idmanager_vars;
+extern icmpv6rpl_vars_t icmpv6rpl_vars;
 
 udp_resource_desc_t uinject_vars;
 
@@ -44,9 +46,9 @@ void uinject_sendDone(OpenQueueEntry_t *msg, owerror_t error)
 
 void uinject_receive(OpenQueueEntry_t *pkt)
 {
+    printf("Received %i bytes on port %i\n", (int)pkt->length, pkt->l4_destination_port);
+    od_hex_dump(pkt->payload, pkt->length, OD_WIDTH_DEFAULT);
     openqueue_freePacketBuffer(pkt);
-    puts("RECEIVED UDP PACKET");
-    printf("l4_sourcePortORicmpv6Type: %i l4_destination_port: %i lenght: %i l4_length: %i\n", pkt->l4_sourcePortORicmpv6Type, pkt->l4_destination_port, pkt->length, pkt->l4_length);
 }
 
 void uinject_init(void)
@@ -68,6 +70,7 @@ static int ifconfig_cmd(int argc, char **argv)
     memcpy(&temp_my128bID.addr_128b[8], &idmanager_vars.my64bID.addr_64b, 8);
     ipv6_addr_to_str(addr_str, (ipv6_addr_t *)temp_my128bID.addr_128b, sizeof(addr_str));
     printf("inet6 %s\n", addr_str);
+    printf("RPL rank: %i\n", icmpv6rpl_vars.myDAGrank);
     return 0;
 }
 

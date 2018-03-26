@@ -27,6 +27,7 @@
 #include "net/ipv6.h"
 
 #include "opendefs.h"
+#include "scheduler.h"
 #include "02a-MAClow/IEEE802154E.h"
 #include "03b-IPv6/icmpv6rpl.h"
 #include "04-TRAN/openudp.h"
@@ -38,6 +39,15 @@ extern udp_resource_desc_t uinject_vars;
 extern idmanager_vars_t idmanager_vars;
 
 static uint16_t counter = 0;
+
+OpenQueueEntry_t *pkt;
+
+void push_pkt_cb(void){
+    owerror_t ret = openudp_send(pkt);
+    if (ret == E_FAIL) {
+        puts("could not send");
+    }
+}
 
 static int udp_send(char *addr_str, char *port_str, char *data, unsigned int num,
                     unsigned int delay)
@@ -58,8 +68,6 @@ static int udp_send(char *addr_str, char *port_str, char *data, unsigned int num
     }
 
     data_len = strlen(data);
-
-    OpenQueueEntry_t *pkt;
     uint8_t asnArray[data_len];
 
     /* get a free packet buffer */
@@ -98,15 +106,9 @@ static int udp_send(char *addr_str, char *port_str, char *data, unsigned int num
     pkt->payload[4] = asnArray[4];
 
     for (unsigned int i = 0; i < num; i++) {
-
-        owerror_t ret = openudp_send(pkt);
-        if (ret == E_FAIL) {
-            puts("could not send");
-        }
-        else {
-            printf("Send %u byte over UDP to [%s]:%s\n",
-                   (unsigned)data_len, addr_str, port_str);
-        }
+        printf("Send %u byte over UDP to [%s]:%s\n",
+                (unsigned)data_len, addr_str, port_str);
+        scheduler_push_task(push_pkt_cb, TASKPRIO_COAP);
         xtimer_usleep(delay);
     }
     return 0;
