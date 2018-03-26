@@ -6,6 +6,7 @@ BOARD ?= iotlab-m3
 USEPKG += openwsn
 USEMODULE += ipv6_addr
 USEMODULE += ps
+USEMODULE += od_string
 USEMODULE += shell
 USEMODULE += shell_commands
 
