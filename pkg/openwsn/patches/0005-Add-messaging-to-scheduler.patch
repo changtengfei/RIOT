@@ -1,0 +1,66 @@
+From ed8c719cb056635a0ff0a1184e1e5904acc76d4e Mon Sep 17 00:00:00 2001
+From: PeterKietzmann <peter.kietzmann@haw-hamburg.de>
+Date: Wed, 14 Feb 2018 16:02:25 +0100
+Subject: [PATCH 5/6] Add messaging to scheduler
+
+---
+ kernel/openos/scheduler.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/kernel/openos/scheduler.c b/kernel/openos/scheduler.c
+index 34ce8ca3..6232dd6c 100644
+--- a/kernel/openos/scheduler.c
++++ b/kernel/openos/scheduler.c
+@@ -9,12 +9,15 @@
+ #include "board_ow.h"
+ #include "debugpins.h"
+ #include "leds.h"
++#include "openwsn.h"
+ 
+ //=========================== variables =======================================
+ 
+ scheduler_vars_t scheduler_vars;
+ scheduler_dbg_t  scheduler_dbg;
+ 
++static kernel_pid_t openwsn_sched_pid = KERNEL_PID_UNDEF;
++
+ //=========================== prototypes ======================================
+ 
+ void consumeTask(uint8_t taskId);
+@@ -33,6 +36,14 @@ void scheduler_init(void) {
+ 
+ void scheduler_start(void) {
+    taskList_item_t* pThisTask;
++
++   msg_t msg;
++   msg_t msg_queue[8];
++   /* initialize message queue */
++   msg_init_queue(msg_queue, 8);
++
++   openwsn_sched_pid = thread_getpid();
++
+    while (1) {
+       while(scheduler_vars.task_list!=NULL) {
+          // there is still at least one task in the linked-list of tasks
+@@ -59,6 +70,7 @@ void scheduler_start(void) {
+       }
+       debugpins_task_clr();
+       board_sleep();
++      msg_receive(&msg);
+       debugpins_task_set();                      // IAR should halt here if nothing to do
+    }
+ }
+@@ -105,6 +117,10 @@ void scheduler_start(void) {
+    }
+    
+    ENABLE_INTERRUPTS();
++
++   msg_t msg;
++   msg.type = OW_SCHED_MSG_TYPE_EVENT;
++   msg_send(&msg, openwsn_sched_pid);
+ }
+ 
+ //=========================== private =========================================
+-- 
+2.14.1
+

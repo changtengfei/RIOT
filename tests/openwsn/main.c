@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Univiversity of Applied Sciences
+ * Copyright (C) 2017 Hamburg University of Applied Sciences
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -20,114 +20,96 @@
 
 #include <stdio.h>
 
+#include "od.h"
+#include "shell.h"
+#include "openwsn.h"
+#include "net/ipv6/addr.h"
+
 #include "opendefs.h"
-#include "openstack.h"
-#include "scheduler.h"
-#include "board_ow.h"
 #include "02a-MAClow/IEEE802154E.h"
+#include "03b-IPv6/icmpv6rpl.h"
 #include "04-TRAN/openudp.h"
 #include "cross-layers/openqueue.h"
-#include "cross-layers/packetfunctions.h"
 #include "cross-layers/idmanager.h"
+#include "cross-layers/packetfunctions.h"
 
-typedef struct {
-   uint16_t             counter;  ///< incrementing counter which is written into the packet
-   uint16_t              period;  ///< uinject packet sending period>
-   udp_resource_desc_t     desc;  ///< resource descriptor for this module, used to register at UDP stack
-} uinject_vars_t;
-
-uinject_vars_t uinject_vars;
-
-void sniffer_setListeningChannel(uint8_t channel){return;}
-
-static const uint8_t uinject_payload[]    = "uinject";
-static const uint8_t uinject_dst_addr[]   = {
-   0xbb, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
-}; 
-
-extern ieee154e_vars_t ieee154e_vars;
 extern idmanager_vars_t idmanager_vars;
+extern icmpv6rpl_vars_t icmpv6rpl_vars;
+
+udp_resource_desc_t uinject_vars;
+
+void uinject_sendDone(OpenQueueEntry_t *msg, owerror_t error)
+{
+    openqueue_freePacketBuffer(msg);
+    puts("Send success");
+}
+
+void uinject_receive(OpenQueueEntry_t *pkt)
+{
+    printf("Received %i bytes on port %i\n", (int)pkt->length, pkt->l4_destination_port);
+    od_hex_dump(pkt->payload, pkt->length, OD_WIDTH_DEFAULT);
+    openqueue_freePacketBuffer(pkt);
+}
+
+void uinject_init(void)
+{
+    uinject_vars.port = WKP_UDP_INJECT;
+    uinject_vars.callbackReceive = &uinject_receive;
+    uinject_vars.callbackSendDone = &uinject_sendDone;
+    openudp_register(&uinject_vars);
+}
+
+static int ifconfig_cmd(int argc, char **argv)
+{
+    if (idmanager_vars.isDAGroot) {
+        puts("Node is DAG root");
+    }
+    open_addr_t temp_my128bID;
+    char addr_str[IPV6_ADDR_MAX_STR_LEN];
+    memcpy(&temp_my128bID.addr_128b[0], &idmanager_vars.myPrefix.prefix, 8);
+    memcpy(&temp_my128bID.addr_128b[8], &idmanager_vars.my64bID.addr_64b, 8);
+    ipv6_addr_to_str(addr_str, (ipv6_addr_t *)temp_my128bID.addr_128b, sizeof(addr_str));
+    printf("inet6 %s\n", addr_str);
+    printf("RPL rank: %i\n", icmpv6rpl_vars.myDAGrank);
+    return 0;
+}
+
+static int rpl_cmd(int argc, char **argv)
+{
+    /* TODO allow other prefixes via shell ?!? */
+    uint8_t temp[8] = { 0xbb, 0xbb, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00 };
+    open_addr_t myPrefix;
+
+    myPrefix.type = ADDR_PREFIX;
+    memcpy(myPrefix.prefix, &temp, sizeof(myPrefix.prefix));
+    idmanager_setMyID(&myPrefix);
+    icmpv6rpl_init();
+    idmanager_setIsDAGroot(TRUE);
+
+    return 0;
+}
+
+extern int udp_cmd(int argc, char **argv);
+
+static const shell_command_t shell_commands[] = {
+    { "ifconfig", "Shows assigned IPv6 addresses", ifconfig_cmd },
+    { "udp", "Send UDP messages and listen for messages on UDP port", udp_cmd },
+    { "rplroot", "Set node as RPL DODAG root node", rpl_cmd },
+    { NULL, NULL, NULL }
+};
 
 int main(void)
 {
-    puts("OpenWSN UDP test!");
+    puts("OpenWSN UDP test");
 
     printf("You are running RIOT on a(n) %s board.\n", RIOT_BOARD);
     printf("This board features a(n) %s MCU.\n", RIOT_MCU);
 
-    board_init_ow();
+    openwsn_bootstrap();
 
-    openstack_init();
+    uinject_init();
 
-    scheduler_start();
-    OpenQueueEntry_t*    pkt;
-    uint8_t              asnArray[5];
-/*
-    // don't run if not synch
-    if (ieee154e_isSynch() == FALSE) return;
-
-    // don't run on dagroot
-    if (idmanager_getIsDAGroot()) {
-      opentimers_destroy(uinject_vars.timerId);
-      return;
-    }
-*/
-    // if you get here, send a packet
-    // Fake that you are in sync for debuging
-    ieee154e_vars.isSync = true;
-    //idmanager_vars.isDAGroot = true; // needed
-    if (idmanager_vars.isDAGroot == true){
-        puts("Node is DAG root");
-    }
-    else{
-        puts("Node is DAG leaf");
-    }
-    // get a free packet buffer
-    pkt = openqueue_getFreePacketBuffer(COMPONENT_UINJECT);
-    if(pkt == NULL){
-        puts("ERROR could not create packet buffer");
-        return -1;
-    }
-    puts("got free packet buffer");
-/*    if (pkt==NULL) {
-      openserial_printError(
-         COMPONENT_UINJECT,
-         ERR_NO_FREE_PACKET_BUFFER,
-         (errorparameter_t)0,
-         (errorparameter_t)0
-      );
-      return -1;
-    }*/
-
-    pkt->owner                         = COMPONENT_UINJECT;
-    puts("write to pkt->owner");
-    pkt->creator                       = COMPONENT_UINJECT;
-    pkt->l4_protocol                   = IANA_UDP;
-    pkt->l4_destination_port           = WKP_UDP_INJECT;
-    pkt->l4_sourcePortORicmpv6Type     = WKP_UDP_INJECT;
-    pkt->l3_destinationAdd.type        = ADDR_128B;
-    memcpy(&pkt->l3_destinationAdd.addr_128b[0],uinject_dst_addr,16);
-    // add payload
-    packetfunctions_reserveHeaderSize(pkt,sizeof(uinject_payload)-1);
-    memcpy(&pkt->payload[0],uinject_payload,sizeof(uinject_payload)-1);
-    packetfunctions_reserveHeaderSize(pkt,sizeof(uint16_t));
-    pkt->payload[1] = (uint8_t)((uinject_vars.counter & 0xff00)>>8);
-    pkt->payload[0] = (uint8_t)(uinject_vars.counter & 0x00ff);
-    uinject_vars.counter++;
-    packetfunctions_reserveHeaderSize(pkt,sizeof(asn_t));
-    ieee154e_getAsn(asnArray);
-    pkt->payload[0] = asnArray[0];
-    pkt->payload[1] = asnArray[1];
-    pkt->payload[2] = asnArray[2];
-    pkt->payload[3] = asnArray[3];
-    pkt->payload[4] = asnArray[4];
-
-    owerror_t ret = openudp_send(pkt);
-    if (ret==E_FAIL) {
-      openqueue_freePacketBuffer(pkt);
-      printf("Failed to send UDP packet: %i\n", (int)ret);
-    }
-    puts("OpenWSN UDP test end");
-    return 0;
+    char line_buf[SHELL_DEFAULT_BUFSIZE];
+    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 }
