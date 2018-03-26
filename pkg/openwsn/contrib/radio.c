@@ -83,6 +83,10 @@ void radio_init(void)
 
     DEBUG("OW initialize RIOT radio (netdev)\n");
     radio_vars.dev->driver->init(radio_vars.dev);
+
+    netopt_state_t state = NETOPT_STATE_STANDBY;
+    radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
+
     radio_vars.dev->event_callback = _event_cb;
     if (radio_vars.dev->driver->get(radio_vars.dev, NETOPT_DEVICE_TYPE, &dev_type,
                                     sizeof(dev_type)) < 0) {
@@ -92,7 +96,7 @@ void radio_init(void)
     DEBUG("OW RIOT radio (netdev) set default options\n");
     netopt_enable_t enable;
     enable = NETOPT_ENABLE;
-    //radio_vars.dev->driver->set(radio_vars.dev, NETOPT_PROMISCUOUSMODE, &(enable), sizeof(netopt_enable_t));
+    // radio_vars.dev->driver->set(radio_vars.dev, NETOPT_PROMISCUOUSMODE, &(enable), sizeof(netopt_enable_t));
     /* Enable needed IRQs */
     enable = NETOPT_ENABLE;
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_RX_START_IRQ, &(enable), sizeof(netopt_enable_t));
@@ -136,6 +140,10 @@ void radio_reset(void)
     netopt_state_t state = NETOPT_STATE_RESET;
 
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
+
+    state = NETOPT_STATE_STANDBY;
+    radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
+  
 }
 
 void radio_setFrequency(uint8_t frequency)
@@ -150,7 +158,7 @@ void radio_setFrequency(uint8_t frequency)
 
 void radio_rfOn(void)
 {
-    netopt_state_t state = NETOPT_STATE_IDLE;
+    netopt_state_t state = NETOPT_STATE_STANDBY;
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
 }
 
@@ -213,7 +221,7 @@ void radio_rxEnable(void)
 
     leds_radio_on();
 
-    netopt_state_t state = NETOPT_STATE_IDLE;
+    netopt_state_t state = NETOPT_STATE_RX;
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
 
     radio_vars.state = RADIOSTATE_LISTENING;

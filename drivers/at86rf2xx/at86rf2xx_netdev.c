@@ -195,6 +195,9 @@ static int _set_state(at86rf2xx_t *dev, netopt_state_t state)
         case NETOPT_STATE_IDLE:
             at86rf2xx_set_state(dev, AT86RF2XX_STATE_RX_AACK_ON);
             break;
+        case NETOPT_STATE_RX:
+            at86rf2xx_set_state(dev, AT86RF2XX_STATE_RX_ON);
+            break;
         case NETOPT_STATE_TX:
             if (dev->netdev.flags & AT86RF2XX_OPT_PRELOADING) {
                 /* The netdev driver ISR switches the transceiver back to the
@@ -604,7 +607,8 @@ static void _isr(netdev_t *netdev)
 
     if (irq_mask & AT86RF2XX_IRQ_STATUS_MASK__TRX_END) {
         if ((state == AT86RF2XX_STATE_RX_AACK_ON)
-            || (state == AT86RF2XX_STATE_BUSY_RX_AACK)) {
+            || (state == AT86RF2XX_STATE_BUSY_RX_AACK)
+            || (state == AT86RF2XX_STATE_RX_ON)) {
             DEBUG("[at86rf2xx] EVT - RX_END\n");
             if (!(dev->netdev.flags & AT86RF2XX_OPT_TELL_RX_END)) {
                 return;
