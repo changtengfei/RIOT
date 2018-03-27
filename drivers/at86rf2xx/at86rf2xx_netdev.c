@@ -187,7 +187,7 @@ static int _set_state(at86rf2xx_t *dev, netopt_state_t state)
 {
     switch (state) {
         case NETOPT_STATE_STANDBY:
-            at86rf2xx_set_state(dev, AT86RF2XX_STATE_TRX_OFF);
+            at86rf2xx_set_state(dev, AT86RF2XX_STATE_FORCE_TRX_OFF);
             break;
         case NETOPT_STATE_SLEEP:
             at86rf2xx_set_state(dev, AT86RF2XX_STATE_SLEEP);
