@@ -55,7 +55,6 @@ typedef struct {
 radio_vars_t radio_vars;
 
 static void _event_cb(netdev_t *dev, netdev_event_t event);
-static void *_event_loop(void *arg);
 
 void radio_init(void)
 {
@@ -70,16 +69,6 @@ void radio_init(void)
     radio_vars.dev = (netdev_t *)&at86rf2xx_dev.netdev.netdev;
     at86rf2xx_setup(&at86rf2xx_dev, &at86rf2xx_params[0]);
 #endif
-
-    DEBUG("OW create riot-adaptation radio thread\n");
-    if (_pid <= KERNEL_PID_UNDEF) {
-        _pid = thread_create(_stack, OW_NETDEV_STACKSIZE, OW_NETDEV_PRIO,
-                             THREAD_CREATE_STACKTEST, _event_loop, NULL,
-                             OW_NETDEV_NAME);
-        if (_pid <= 0) {
-            DEBUG("OW couldn't create thread\n");
-        }
-    }
 
     DEBUG("OW initialize RIOT radio (netdev)\n");
     radio_vars.dev->driver->init(radio_vars.dev);
@@ -164,7 +153,7 @@ void radio_rfOn(void)
 
 void radio_rfOff(void)
 {
-    netopt_state_t state = NETOPT_STATE_OFF;
+    netopt_state_t state = NETOPT_STATE_STANDBY;
 
     radio_vars.dev->driver->set(radio_vars.dev, NETOPT_STATE, &(state), sizeof(netopt_state_t));
     leds_radio_off();
@@ -238,6 +227,7 @@ void radio_getReceivedFrame(uint8_t *bufRead,
                             bool *crc)
 {
     netdev_ieee802154_rx_info_t rx_info;
+
     int bytes_expected = radio_vars.dev->driver->recv(radio_vars.dev, bufRead, maxBufLen, &rx_info);
 
     if (bytes_expected) {
@@ -267,16 +257,10 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
 {
     if (event == NETDEV_EVENT_ISR) {
         /* capture the time */
+        debugpins_isr_set();
         capturedTime = sctimer_readCounter();
-        assert(_pid != KERNEL_PID_UNDEF);
-        msg_t msg;
-
-        msg.type = OW_NETDEV_MSG_TYPE_EVENT;
-        msg.content.ptr = dev;
-
-        if (msg_send(&msg, _pid) <= 0) {
-            DEBUG("ow_netdev: possibly lost interrupt.\n");
-        }
+        radio_vars.dev->driver->isr(radio_vars.dev);
+        debugpins_isr_clr();
     }
     else {
         DEBUG("ow_netdev: event triggered -> %i\n", event);
@@ -298,19 +282,4 @@ static void _event_cb(netdev_t *dev, netdev_event_t event)
                 break;
         }
     }
-}
-
-static void *_event_loop(void *arg)
-{
-    (void)arg;
-    msg_init_queue(_queue, OW_NETDEV_QUEUE_LEN);
-    while (1) {
-        msg_t msg;
-        msg_receive(&msg);
-        if (msg.type == OW_NETDEV_MSG_TYPE_EVENT) {
-            netdev_t *dev = msg.content.ptr;
-            dev->driver->isr(dev);
-        }
-    }
-    return NULL;
 }
